@@ -141,17 +141,7 @@ export default function AdminAddProduct() {
                   />
                   <button className="admin-action-btn" onClick={addSubcategory} type="button">Add</button>
                 </div>
-                <div className="admin-tags-wrap">
-                  {subcategories.length ? (
-                    subcategories.map((item) => (
-                      <button className="admin-tag" key={item} onClick={() => removeSubcategory(item)} type="button">
-                        {item} ×
-                      </button>
-                    ))
-                  ) : (
-                    <span className="admin-inline-note">No sub category added yet.</span>
-                  )}
-                </div>
+
               </div>
 
               <div className="admin-field-group admin-field-group--full">

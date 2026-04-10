@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ isDrawerOpen, onClose }) {
   const navItems = [
     ['Dashboard', '08'],
     ['Products', '24'],
@@ -12,13 +12,16 @@ export default function AdminSidebar() {
   ];
     
   return (
-    <aside className="admin-sidebar">
+    <aside className={`admin-sidebar ${isDrawerOpen ? 'admin-sidebar--drawer-open' : ''}`}>
       <div className="admin-brand">
         <div className="admin-brand-mark">B</div>
         <div className="admin-brand-copy">
           <div className="admin-brand-title">Bayou Admin</div>
           <div className="admin-brand-subtitle">UI only</div>
         </div>
+        <button aria-label="Close sidebar" className="admin-sidebar-close" onClick={onClose} type="button">
+          ×
+        </button>
       </div>
 
     <nav className="admin-nav" aria-label="Admin navigation">
@@ -27,6 +30,7 @@ export default function AdminSidebar() {
         <NavLink
           to={`/admin/${label.toLowerCase()}`}
           key={label}
+          onClick={onClose}
           className={({ isActive }) => 
             `admin-nav-link ${isActive ? 'is-active' : ''}`
           }

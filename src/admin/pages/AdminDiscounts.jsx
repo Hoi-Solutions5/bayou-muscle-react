@@ -285,32 +285,34 @@ export default function AdminDiscounts() {
             </div>
           </div>
 
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Type</th>
-                <th>Discount</th>
-                <th>Scope</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {coupons.map((item) => (
-                <tr key={item.code}>
-                  <td>
-                    <strong>{item.code}</strong>
-                  </td>
-                  <td>{item.type}</td>
-                  <td>{item.value}</td>
-                  <td>{item.scope}</td>
-                  <td>
-                    <span className={`admin-status ${renderStatus(item.status)}`}>{item.status}</span>
-                  </td>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Type</th>
+                  <th>Discount</th>
+                  <th>Scope</th>
+                  <th>Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {coupons.map((item) => (
+                  <tr key={item.code}>
+                    <td>
+                      <strong>{item.code}</strong>
+                    </td>
+                    <td>{item.type}</td>
+                    <td>{item.value}</td>
+                    <td>{item.scope}</td>
+                    <td>
+                      <span className={`admin-status ${renderStatus(item.status)}`}>{item.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </article>
 
         <article className="admin-card">

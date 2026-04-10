@@ -14,6 +14,8 @@ import AdminUsers from '../admin/pages/AdminUsers';
 import AdminSettings from '../admin/pages/AdminSettings';
 import AdminCategories from '../admin/pages/AdminCategories';
 import AdminDiscounts from '../admin/pages/AdminDiscounts';
+import AdminLogin from '../admin/pages/AdminLogin'; 
+
 export default function AppRouter() {
 	const navigate = useNavigate();
 	const location = useLocation();
@@ -45,6 +47,7 @@ export default function AppRouter() {
 			<Route path="/admin/settings" element={<AdminSettings />} />
 			<Route path="/admin/categories" element={<AdminCategories />} />
 			<Route path="/admin/discounts" element={<AdminDiscounts />} />
+			<Route path="/admin/login" element={<AdminLogin />} />
 			<Route path="*" element={<Navigate to="/home" replace />} />
 		</Routes>
 	);
