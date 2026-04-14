@@ -4,11 +4,12 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 
 import Home        from './pages/Home';
 import Supplements from './pages/Supplements/Supplements';
-import Shop        from './pages/Shop';
+import Shop        from './pages/Shop-old';
 import ProductDetail from './pages/ProductDetail/ProductDetail';
 import Contact     from './pages/Contact';
-import Cart        from './pages/Cart';
-import Blog        from './pages/Blog';
+// import Cart        from './pages/Cart';
+import Blog        from './pages/Blog/Blog';
+import BlogDetails from './pages/BlogDetails/BlogDetails';
 import About        from './pages/About/About';
 import Merchandise from './pages/Merchandise/Merchandise';
 
@@ -26,7 +27,8 @@ const ROUTES = {
   contact:       (nav) => <Contact />,
   cart:          (nav) => <Cart onNavigate={nav} initialView="cart" />,
   checkout:      (nav) => <Cart onNavigate={nav} initialView="checkout" />,
-  blog:          (nav) => <Blog onNavigate={nav} />,
+  blog:          (nav) => <Blog />,
+  blogDetails:   (nav) => <BlogDetails />,
 };
 
 /* Route name nikalna pathname se — e.g. "/supplements" → "supplements" */
@@ -34,8 +36,12 @@ function getPageFromPath() {
   const pathname = window.location.pathname;
   if (!pathname || pathname === '/') return 'home';
   const parts = pathname.replace(/^\//, '').split('/');
-  const page = parts[0].toLowerCase().trim();
+  const pageLower = parts[0].toLowerCase().trim();
   const param = parts[1]; // product ID ya slug
+  
+  // Case-insensitive route matching
+  let page = pageLower;
+  if (pageLower === 'blogdetails') page = 'blogDetails';
   
   // Product ke liye param store karo
   if (page === 'product' && param) {

@@ -318,18 +318,16 @@ export default function Home() {
         <div className="hm-hero__overlay" />
         <div className="hm-hero__content">
           <h1 className="hm-hero__title">
-            Hard Work
-            <br />
-            Creates Strength.
+           <img src="/blogs/work.png" alt="" />
           </h1>
-          <p className="hm-hero__label">Smart Fuel Sustains IT.</p>
+          <p className="hm-hero__label"> <img src="/blogs/smart.png" alt="" /></p>
           <a
             href="#"
             className="hm-hero__btn"
-            onClick={(e) => nav("shop", null, e)}
+            onClick={(e) => nav("", null, e)}
           >
-            Shop Now
-            <img src="/images/arrowdoen.png" alt="" />
+            
+            <img src="/blogs/shop.png" alt="" />
           </a>
         </div>
       </section>

@@ -16,7 +16,7 @@ export default function Footer() {
 
       {/* ── CONTACT BAR ── Figma: Section y=30 h=144, bg #202020 */}
       <div className="ftr__contact-bar">
-        <div className="ftr__contact-inner">
+        <div className="ftr__contact-inner ">
           {/* Logo — Figma: Clip path group x=145 y=30, w=130 h=79 */}
           <div className="ftr__logo">
             <img src={imgLogo} alt="Bayou Muscle" className="ftr__logo-img" />
