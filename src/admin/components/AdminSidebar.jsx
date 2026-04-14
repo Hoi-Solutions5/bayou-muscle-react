@@ -1,6 +1,11 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import useAuth from '../../hooks/useAuth';
 
 export default function AdminSidebar({ isDrawerOpen, onClose }) {
+  const navigate = useNavigate();
+  const { logout, isLoading } = useAuth();
+
   const navItems = [
     ['Dashboard'],
     ['Products'],
@@ -10,6 +15,19 @@ export default function AdminSidebar({ isDrawerOpen, onClose }) {
     ['Categories'],
     ['Discounts'],
   ];
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully.');
+      onClose?.();
+      navigate('/admin/login', { replace: true });
+    } catch {
+      toast.error('Unable to logout right now.');
+      onClose?.();
+      navigate('/admin/login', { replace: true });
+    }
+  };
     
   return (
     <aside className={`admin-sidebar ${isDrawerOpen ? 'admin-sidebar--drawer-open' : ''}`}>
@@ -42,14 +60,11 @@ export default function AdminSidebar({ isDrawerOpen, onClose }) {
     </nav>
 
       <div className="admin-sidebar-footer">
-        <div className="admin-status-card">
-          <div className="admin-status-kicker">Theme</div>
-          <div className="admin-status-value">Gold</div>
-          <div className="admin-status-text">
-            Uses the shared Bayou palette with separate admin surface styling.
-          </div>
-        </div>
-        <div className="admin-footer-note">No services. No hooks. UI template only.</div>
+        <button className="admin-sidebar-logout-btn" onClick={handleLogout} type="button" disabled={isLoading}>
+          {isLoading ? 'Logging out...' : 'Logout'}
+        </button>
+
+        <div className="admin-footer-note"></div>
       </div>
     </aside>
   );

@@ -1,15 +1,39 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import useAuth from '../../hooks/useAuth';
 
 export default function AdminLogin() {
 	const navigate = useNavigate();
-	const [email, setEmail] = useState('admin@bayoumuscle.com');
+	const { login, isLoading, error } = useAuth();
+	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [showPassword, setShowPassword] = useState(false);
 	const [rememberMe, setRememberMe] = useState(true);
+	const [formError, setFormError] = useState('');
 
-	const onSubmit = (event) => {
+	const onSubmit = async (event) => {
 		event.preventDefault();
+		setFormError('');
+
+		const normalizedEmail = email.trim();
+		if (!normalizedEmail || !password.trim()) {
+			setFormError('Email and password are required.');
+			toast.error('Email and password are required.');
+			return;
+		}
+
+		try {
+			const result = await login({
+				email: normalizedEmail,
+				password,
+				rememberMe,
+			});
+			toast.success(result?.message || 'Logged in successfully');
+			navigate('/admin/dashboard');
+		} catch (err) {
+			toast.error(err?.message || 'Unable to sign in. Please try again.');
+		}
 	};
 
 	return (
@@ -25,15 +49,12 @@ export default function AdminLogin() {
 					</div>
 
 					<div className="admin-login-headline" style={{color:"white"}}>Secure access for admin operations</div>
-					<div className="admin-login-copy">
-						This page is UI-only for now. Once auth is integrated, the same layout can support real sign-in flow,
-						validation, and role-based access.
-					</div>
+					<div className="admin-login-copy">Sign in with your admin credentials to access dashboard operations securely.</div>
 
 					<div className="admin-login-badges">
-						<span className="admin-login-badge">Gold Theme</span>
-						<span className="admin-login-badge">Responsive</span>
-						<span className="admin-login-badge">UI Only</span>
+						<span className="admin-login-badge">Admin Panel</span>
+						<span className="admin-login-badge">Manage</span>
+						<span className="admin-login-badge">Live Auth</span>
 					</div>
 				</aside>
 
@@ -43,6 +64,8 @@ export default function AdminLogin() {
 					<p className="admin-login-subtitle">Sign in to manage products, discounts, categories, and users.</p>
 
 					<form className="admin-login-form" onSubmit={onSubmit}>
+						{formError || error ? <div className="admin-modal-error">{formError || error}</div> : null}
+
 						<div className="admin-field-group">
 							<label className="admin-field-label" htmlFor="adminEmail">Email</label>
 							<input
@@ -51,7 +74,8 @@ export default function AdminLogin() {
 								type="email"
 								value={email}
 								onChange={(event) => setEmail(event.target.value)}
-								placeholder="admin@bayoumuscle.com"
+								placeholder="admin@bayou.com"
+								disabled={isLoading}
 							/>
 						</div>
 
@@ -65,11 +89,13 @@ export default function AdminLogin() {
 									value={password}
 									onChange={(event) => setPassword(event.target.value)}
 									placeholder="Enter your password"
+									disabled={isLoading}
 								/>
 								<button
 									className="admin-action-btn admin-action-btn--ghost"
 									onClick={() => setShowPassword((prev) => !prev)}
 									type="button"
+									disabled={isLoading}
 								>
 									{showPassword ? 'Hide' : 'Show'}
 								</button>
@@ -82,22 +108,25 @@ export default function AdminLogin() {
 									checked={rememberMe}
 									onChange={(event) => setRememberMe(event.target.checked)}
 									type="checkbox"
+									disabled={isLoading}
 								/>
 								<span>Remember me</span>
 							</label>
-							<button className="admin-login-link" type="button">Forgot password?</button>
+							<button className="admin-login-link" type="button" disabled={isLoading}>Forgot password?</button>
 						</div>
 
 						<div className="admin-actions-row">
-							<button className="admin-action-btn" type="submit">Sign In</button>
-							<button className="admin-action-btn admin-action-btn--ghost" type="button" onClick={() => navigate('/home')}>
+							<button className="admin-action-btn" type="submit" disabled={isLoading}>
+								{isLoading ? 'Signing In...' : 'Sign In'}
+							</button>
+							<button className="admin-action-btn admin-action-btn--ghost" type="button" disabled={isLoading} onClick={() => navigate('/home')}>
 								Back to Site
 							</button>
 						</div>
 					</form>
 
 					<div className="admin-login-footer-note">
-						Demo credentials are pre-filled for UI testing. No backend auth is connected yet.
+						Use your admin email and password. Successful sign-in redirects to the admin dashboard.
 					</div>
 				</article>
 			</div>

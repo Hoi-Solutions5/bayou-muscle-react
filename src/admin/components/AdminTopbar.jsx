@@ -16,7 +16,6 @@ export default function AdminTopbar({ title, subtitle, onToggleSidebar }) {
       </div>
 
       <div className="admin-topbar-actions">
-        <input className="admin-search" type="search" placeholder="Search orders, products, users..." />
         <button className="admin-icon-btn" type="button" aria-label="Notifications">
           <span>●</span>
         </button>

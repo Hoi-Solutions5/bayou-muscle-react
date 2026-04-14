@@ -15,6 +15,7 @@ import AdminSettings from '../admin/pages/AdminSettings';
 import AdminCategories from '../admin/pages/AdminCategories';
 import AdminDiscounts from '../admin/pages/AdminDiscounts';
 import AdminLogin from '../admin/pages/AdminLogin'; 
+import ProtectedRoute from '../components/ProtectedRoute';
 
 export default function AppRouter() {
 	const navigate = useNavigate();
@@ -38,15 +39,15 @@ export default function AppRouter() {
 			<Route path="/cart" element={<Cart onNavigate={navigate} initialView="cart" />} />
 			<Route path="/checkout" element={<Cart onNavigate={navigate} initialView="checkout" />} />
 			<Route path="/blog" element={<Blog onNavigate={navigate} />} />
-			<Route path="/admin" element={<AdminDashboard />} />
-			<Route path="/admin/dashboard" element={<AdminDashboard />} />
-			<Route path="/admin/products" element={<AdminProducts />} />
-			<Route path="/admin/products/add" element={<AdminAddProduct />} />
-			<Route path="/admin/orders" element={<AdminOrders />} />
-			<Route path="/admin/users" element={<AdminUsers />} />
-			<Route path="/admin/settings" element={<AdminSettings />} />
-			<Route path="/admin/categories" element={<AdminCategories />} />
-			<Route path="/admin/discounts" element={<AdminDiscounts />} />
+			<Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+			<Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+			<Route path="/admin/products" element={<ProtectedRoute><AdminProducts /></ProtectedRoute>} />
+			<Route path="/admin/products/add" element={<ProtectedRoute><AdminAddProduct /></ProtectedRoute>} />
+			<Route path="/admin/orders" element={<ProtectedRoute><AdminOrders /></ProtectedRoute>} />
+			<Route path="/admin/users" element={<ProtectedRoute><AdminUsers /></ProtectedRoute>} />
+			<Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
+			<Route path="/admin/categories" element={<ProtectedRoute><AdminCategories /></ProtectedRoute>} />
+			<Route path="/admin/discounts" element={<ProtectedRoute><AdminDiscounts /></ProtectedRoute>} />
 			<Route path="/admin/login" element={<AdminLogin />} />
 			<Route path="*" element={<Navigate to="/home" replace />} />
 		</Routes>

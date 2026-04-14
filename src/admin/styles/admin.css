@@ -145,6 +145,31 @@
   gap: 14px;
 }
 
+.admin-sidebar-logout-btn {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.admin-sidebar-logout-btn:hover {
+  border-color: rgba(221, 202, 138, 0.7);
+  background: rgba(221, 202, 138, 0.15);
+  color: var(--admin-white);
+}
+
+.admin-sidebar-logout-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .admin-status-card {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -717,6 +742,48 @@
   color: var(--admin-soft);
   line-height: 1.6;
   font-size: 14px;
+}
+
+.admin-category-search {
+  min-width: 280px;
+  height: 42px;
+}
+
+.admin-card-head--categories {
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.admin-category-toolbar {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 640px;
+}
+
+.admin-category-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.admin-pagination-row {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .admin-subcategory-list {
@@ -1381,8 +1448,24 @@
     align-items: stretch;
   }
 
-  .admin-actions-row {
+  .admin-card-head--categories {
+    gap: 14px;
+  }
+
+  .admin-actions-row,
+  .admin-category-toolbar {
     margin-left: 0 !important;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .admin-category-search {
+    min-width: 0;
+    flex: 1 1 260px;
+  }
+
+  .admin-category-toolbar-actions {
+    justify-content: flex-start;
   }
 
   .admin-hero,
@@ -1495,6 +1578,23 @@
   .admin-list-actions {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .admin-category-search {
+    min-width: 100%;
+  }
+
+  .admin-category-toolbar {
+    gap: 10px;
+  }
+
+  .admin-category-toolbar-actions {
+    width: 100%;
+  }
+
+  .admin-pagination-controls {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .admin-action-menu {

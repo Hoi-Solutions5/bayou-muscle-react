@@ -1,36 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import toast from 'react-hot-toast';
 import AdminLayout from '../layouts/AdminLayout';
-
-const initialCategories = [
-	{
-		id: 'supplement',
-		title: 'Supplement',
-		status: 'active',
-		subcategories: [
-			{ id: 'supplement-protein', title: 'Protein', status: 'active' },
-			{ id: 'supplement-pre-workout', title: 'Pre-Workout', status: 'active' },
-			{ id: 'supplement-recovery', title: 'Recovery', status: 'inactive' },
-			{ id: 'supplement-vitamins', title: 'Vitamins', status: 'active' },
-		],
-	},
-	{
-		id: 'merchandise',
-		title: 'Merchandise',
-		status: 'active',
-		subcategories: [
-			{ id: 'merchandise-t-shirts', title: 'T-Shirts', status: 'active' },
-			{ id: 'merchandise-hoodies', title: 'Hoodies', status: 'active' },
-			{ id: 'merchandise-accessories', title: 'Accessories', status: 'inactive' },
-			{ id: 'merchandise-gym-bags', title: 'Gym Bags', status: 'active' },
-		],
-	},
-];
+import useCategories from '../../hooks/useCategories';
 
 const emptyCategoryForm = {
 	type: 'parent',
 	title: '',
 	status: 'active',
-	parentId: 'supplement',
+	parentId: '',
 };
 
 const createSlug = (value) =>
@@ -42,21 +19,87 @@ const createSlug = (value) =>
 
 const createId = (prefix, value) => `${prefix}-${createSlug(value)}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
 
+const formatDate = (value) => {
+	if (!value) {
+		return '--';
+	}
+
+	const date = new Date(value);
+	if (Number.isNaN(date.getTime())) {
+		return '--';
+	}
+
+	return date.toLocaleDateString();
+};
+
 export default function AdminCategories() {
-	const [selectedCategoryId, setSelectedCategoryId] = useState('supplement');
-	const [categories, setCategories] = useState(initialCategories);
+	const [selectedCategoryId, setSelectedCategoryId] = useState('');
+	const { categories, setCategories, isLoading, error, refetch } = useCategories();
 	const [isModalOpen, setIsModalOpen] = useState(false);
 	const [modalMode, setModalMode] = useState('add');
 	const [editingTarget, setEditingTarget] = useState(null);
 	const [openActionMenu, setOpenActionMenu] = useState(null);
 	const [categoryForm, setCategoryForm] = useState(emptyCategoryForm);
 	const [formError, setFormError] = useState('');
+	const [searchTerm, setSearchTerm] = useState('');
+	const [currentPage, setCurrentPage] = useState(1);
+	const pageSize = 8;
 
 	const selectedCategory = categories.find((item) => item.id === selectedCategoryId) || categories[0] || null;
 	const availableParentCategories =
 		editingTarget?.type === 'parent' && categoryForm.type === 'subcategory'
 			? categories.filter((item) => item.id !== editingTarget.id)
 			: categories;
+
+	const allCategoryRows = useMemo(
+		() =>
+			categories.flatMap((parent) => [
+				{
+					rowKey: `parent-${parent.id}`,
+					type: 'parent',
+					id: parent.id,
+					parentId: null,
+					title: parent.title,
+					parentTitle: '--',
+					status: parent.status,
+					createdAt: parent.createdAt,
+					updatedAt: parent.updatedAt,
+				},
+				...(parent.subcategories || []).map((child) => ({
+					rowKey: `subcategory-${child.id}`,
+					type: 'subcategory',
+					id: child.id,
+					parentId: parent.id,
+					title: child.title,
+					parentTitle: parent.title,
+					status: child.status,
+					createdAt: child.createdAt,
+					updatedAt: child.updatedAt,
+				})),
+			]),
+		[categories],
+	);
+
+	const filteredRows = useMemo(() => {
+		const query = searchTerm.trim().toLowerCase();
+		if (!query) {
+			return allCategoryRows;
+		}
+
+		return allCategoryRows.filter((row) =>
+			[row.title, row.parentTitle, row.status, row.type].some((value) =>
+				String(value || '')
+					.toLowerCase()
+					.includes(query),
+			),
+		);
+	}, [allCategoryRows, searchTerm]);
+
+	const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+	const paginatedRows = useMemo(() => {
+		const startIndex = (currentPage - 1) * pageSize;
+		return filteredRows.slice(startIndex, startIndex + pageSize);
+	}, [filteredRows, currentPage]);
 
 	const resetModalState = () => {
 		setIsModalOpen(false);
@@ -65,8 +108,43 @@ export default function AdminCategories() {
 		setFormError('');
 		setCategoryForm({
 			...emptyCategoryForm,
-			parentId: selectedCategory?.id || emptyCategoryForm.parentId,
+			parentId: selectedCategory?.id || categories[0]?.id || emptyCategoryForm.parentId,
 		});
+	};
+
+	useEffect(() => {
+		if (!error) {
+			return;
+		}
+
+		toast.error(error);
+	}, [error]);
+
+	useEffect(() => {
+		if (!categories.length) {
+			setSelectedCategoryId('');
+			return;
+		}
+
+		const isSelectedValid = categories.some((item) => item.id === selectedCategoryId);
+		if (!isSelectedValid) {
+			setSelectedCategoryId(categories[0].id);
+		}
+	}, [categories, selectedCategoryId]);
+
+	useEffect(() => {
+		if (currentPage > totalPages) {
+			setCurrentPage(totalPages);
+		}
+	}, [currentPage, totalPages]);
+
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [searchTerm]);
+
+	const showFormError = (message) => {
+		setFormError(message);
+		toast.error(message);
 	};
 
 	useEffect(() => {
@@ -122,7 +200,7 @@ export default function AdminCategories() {
 		setFormError('');
 		setCategoryForm({
 			...emptyCategoryForm,
-			parentId: selectedCategory?.id || emptyCategoryForm.parentId,
+			parentId: selectedCategory?.id || categories[0]?.id || emptyCategoryForm.parentId,
 		});
 		setIsModalOpen(true);
 	};
@@ -169,10 +247,11 @@ export default function AdminCategories() {
 
 	const handleSubmitCategory = (event) => {
 		event.preventDefault();
+		const nowIso = new Date().toISOString();
 
 		const title = categoryForm.title.trim();
 		if (!title) {
-			setFormError('Enter a category title.');
+			showFormError('Enter a category title.');
 			return;
 		}
 
@@ -180,7 +259,7 @@ export default function AdminCategories() {
 			if (categoryForm.type === 'parent') {
 				const duplicateParent = categories.some((item) => item.title.toLowerCase() === title.toLowerCase());
 				if (duplicateParent) {
-					setFormError('A parent category with that title already exists.');
+					showFormError('A parent category with that title already exists.');
 					return;
 				}
 
@@ -188,28 +267,32 @@ export default function AdminCategories() {
 				setCategories((previous) => [
 					...previous,
 					{
-						id: newParentId,
+						id: String(newParentId),
+						parentId: null,
 						title,
 						status: categoryForm.status,
-						description: 'New parent category created from the admin modal.',
+						slug: createSlug(title),
+						createdAt: nowIso,
+						updatedAt: nowIso,
 						subcategories: [],
 					},
 				]);
 				setSelectedCategoryId(newParentId);
 				resetModalState();
+				toast.success('Parent category added successfully.');
 				return;
 			}
 
 			const parentId = categoryForm.parentId || selectedCategory?.id;
 			const parent = categories.find((item) => item.id === parentId);
 			if (!parent) {
-				setFormError('Choose a valid parent category.');
+				showFormError('Choose a valid parent category.');
 				return;
 			}
 
 			const duplicateSubcategory = parent.subcategories.some((item) => item.title.toLowerCase() === title.toLowerCase());
 			if (duplicateSubcategory) {
-				setFormError('That subcategory already exists under the selected parent.');
+				showFormError('That subcategory already exists under the selected parent.');
 				return;
 			}
 
@@ -218,12 +301,16 @@ export default function AdminCategories() {
 					item.id === parentId
 						? {
 							...item,
+							updatedAt: nowIso,
 							subcategories: [
 								...item.subcategories,
 								{
 									id: createId(parentId, title),
+									parentId,
 									title,
 									status: categoryForm.status,
+									createdAt: nowIso,
+									updatedAt: nowIso,
 								},
 							],
 						}
@@ -232,13 +319,14 @@ export default function AdminCategories() {
 			);
 			setSelectedCategoryId(parentId);
 			resetModalState();
+			toast.success('Subcategory added successfully.');
 			return;
 		}
 
 		if (editingTarget?.type === 'parent') {
 			const currentParent = categories.find((item) => item.id === editingTarget.id);
 			if (!currentParent) {
-				setFormError('That category is no longer available.');
+				showFormError('That category is no longer available.');
 				return;
 			}
 
@@ -247,7 +335,7 @@ export default function AdminCategories() {
 					(item) => item.id !== currentParent.id && item.title.toLowerCase() === title.toLowerCase(),
 				);
 				if (duplicateParent) {
-					setFormError('A parent category with that title already exists.');
+					showFormError('A parent category with that title already exists.');
 					return;
 				}
 
@@ -258,37 +346,42 @@ export default function AdminCategories() {
 								...item,
 								title,
 								status: categoryForm.status,
+								updatedAt: nowIso,
 							}
 							: item,
 					),
 				);
 				setSelectedCategoryId(currentParent.id);
 				resetModalState();
+				toast.success('Parent category updated successfully.');
 				return;
 			}
 
 			const targetParentId = categoryForm.parentId || selectedCategory?.id;
 			if (!targetParentId || targetParentId === currentParent.id) {
-				setFormError('Choose a different parent category.');
+				showFormError('Choose a different parent category.');
 				return;
 			}
 
 			const targetParent = categories.find((item) => item.id === targetParentId);
 			if (!targetParent) {
-				setFormError('The selected parent category is no longer available.');
+				showFormError('The selected parent category is no longer available.');
 				return;
 			}
 
 			const duplicateSubcategory = targetParent.subcategories.some((item) => item.title.toLowerCase() === title.toLowerCase());
 			if (duplicateSubcategory) {
-				setFormError('That subcategory already exists under the selected parent.');
+				showFormError('That subcategory already exists under the selected parent.');
 				return;
 			}
 
 			const movedSubcategory = {
 				id: createId(targetParentId, title),
+				parentId: targetParentId,
 				title,
 				status: categoryForm.status,
+				createdAt: nowIso,
+				updatedAt: nowIso,
 			};
 
 			setCategories((previous) =>
@@ -300,6 +393,7 @@ export default function AdminCategories() {
 					if (item.id === targetParentId) {
 						accumulator.push({
 							...item,
+							updatedAt: nowIso,
 							subcategories: [...item.subcategories, movedSubcategory],
 						});
 						return accumulator;
@@ -311,13 +405,14 @@ export default function AdminCategories() {
 			);
 			setSelectedCategoryId(targetParentId);
 			resetModalState();
+			toast.success('Parent category converted and subcategory moved successfully.');
 			return;
 		}
 
 		const currentParent = categories.find((item) => item.id === editingTarget?.parentId);
 		const currentSubcategory = currentParent?.subcategories.find((item) => item.id === editingTarget?.id);
 		if (!currentParent || !currentSubcategory) {
-			setFormError('That subcategory is no longer available.');
+			showFormError('That subcategory is no longer available.');
 			return;
 		}
 
@@ -325,7 +420,7 @@ export default function AdminCategories() {
 			const targetParentId = categoryForm.parentId || currentParent.id;
 			const targetParent = categories.find((item) => item.id === targetParentId);
 			if (!targetParent) {
-				setFormError('The selected parent category is no longer available.');
+				showFormError('The selected parent category is no longer available.');
 				return;
 			}
 
@@ -333,7 +428,7 @@ export default function AdminCategories() {
 				(item) => item.id !== currentSubcategory.id && item.title.toLowerCase() === title.toLowerCase(),
 			);
 			if (duplicateSubcategory) {
-				setFormError('That subcategory already exists under the selected parent.');
+				showFormError('That subcategory already exists under the selected parent.');
 				return;
 			}
 
@@ -342,8 +437,11 @@ export default function AdminCategories() {
 					if (item.id === currentParent.id && currentParent.id === targetParentId) {
 						return {
 							...item,
+							updatedAt: nowIso,
 							subcategories: item.subcategories.map((subcategory) =>
-								subcategory.id === currentSubcategory.id ? { ...subcategory, title, status: categoryForm.status } : subcategory,
+								subcategory.id === currentSubcategory.id
+									? { ...subcategory, title, status: categoryForm.status, updatedAt: nowIso }
+									: subcategory,
 							),
 						};
 					}
@@ -358,7 +456,18 @@ export default function AdminCategories() {
 					if (item.id === targetParentId) {
 						return {
 							...item,
-							subcategories: [...item.subcategories, { id: currentSubcategory.id, title, status: categoryForm.status }],
+							updatedAt: nowIso,
+							subcategories: [
+								...item.subcategories,
+								{
+									id: currentSubcategory.id,
+									parentId: targetParentId,
+									title,
+									status: categoryForm.status,
+									createdAt: currentSubcategory.createdAt || nowIso,
+									updatedAt: nowIso,
+								},
+							],
 						};
 					}
 
@@ -367,12 +476,13 @@ export default function AdminCategories() {
 			);
 			setSelectedCategoryId(targetParentId);
 			resetModalState();
+			toast.success('Subcategory updated successfully.');
 			return;
 		}
 
 		const duplicateParent = categories.some((item) => item.id !== currentParent.id && item.title.toLowerCase() === title.toLowerCase());
 		if (duplicateParent) {
-			setFormError('A parent category with that title already exists.');
+			showFormError('A parent category with that title already exists.');
 			return;
 		}
 
@@ -390,40 +500,51 @@ export default function AdminCategories() {
 					return item;
 				})
 				.concat({
-					id: newParentId,
+					id: String(newParentId),
+					parentId: null,
 					title,
 					status: categoryForm.status,
-					description: 'New parent category created from the admin modal.',
+					slug: createSlug(title),
+					createdAt: nowIso,
+					updatedAt: nowIso,
 					subcategories: [],
 				}),
 		);
 		setSelectedCategoryId(newParentId);
 		resetModalState();
+		toast.success('Category structure updated successfully.');
 	};
 
-	const handleRemoveSubcategory = (subcategoryId) => {
+	const handleRemoveSubcategory = (parentId, subcategoryId) => {
 		setOpenActionMenu(null);
+		const parent = categories.find((item) => item.id === parentId);
+		const removedSubcategory = parent?.subcategories.find((subcategory) => subcategory.id === subcategoryId);
 		setCategories((previous) =>
 			previous.map((item) => {
-				if (item.id !== selectedCategory?.id) {
+				if (item.id !== parentId) {
 					return item;
 				}
 
 				return {
 					...item,
+					updatedAt: new Date().toISOString(),
 					subcategories: item.subcategories.filter((subcategory) => subcategory.id !== subcategoryId),
 				};
 			}),
 		);
+		toast.success(`${removedSubcategory?.title || 'Subcategory'} deleted successfully.`);
 	};
 
 	const handleRemoveParentCategory = (parentId) => {
 		setOpenActionMenu(null);
+		const removedParent = categories.find((item) => item.id === parentId);
+		const wasSelected = selectedCategoryId === parentId;
 		setCategories((previous) => previous.filter((item) => item.id !== parentId));
-		if (selectedCategoryId === parentId) {
+		if (wasSelected) {
 			const fallbackCategory = categories.find((item) => item.id !== parentId);
 			setSelectedCategoryId(fallbackCategory?.id || '');
 		}
+		toast.success(`${removedParent?.title || 'Category'} deleted successfully.`);
 	};
 
 	const toggleActionMenu = (event, payload) => {
@@ -458,157 +579,174 @@ export default function AdminCategories() {
 		openEditModal({ type: 'subcategory', parentId, id: subcategoryId });
 	};
 
-	const categoryCards = categories.map((item, index) => ({
-		key: item.id,
-		title: item.title,
-		count: item.subcategories.length,
-		status: item.status,
-		accent: index % 2 === 0 ? 'admin-category-card--supplement' : 'admin-category-card--merchandise',
-	}));
+	if (isLoading) {
+		return (
+			<AdminLayout title="Categories" subtitle="Manage parent categories and subcategories in one place.">
+				<section className="admin-card">
+					<div className="admin-form-section-title">Categories</div>
+					<div className="admin-preview-copy">Loading categories...</div>
+				</section>
+			</AdminLayout>
+		);
+	}
 
 	return (
 		<AdminLayout title="Categories" subtitle="Manage parent categories and subcategories in one place.">
 			<section className="admin-card">
-				<div className="admin-card-head">
+				<div className="admin-card-head admin-card-head--categories">
 					<div>
 						<div className="admin-card-kicker">Catalog structure</div>
-						<div className="admin-card-title">Category manager</div>
+						<div className="admin-card-title">Category table</div>
 						<div className="admin-card-subtitle">
-							Keep the category tree clean. Add and edit categories from the modal, then manage the existing structure below.
+							All parent categories and subcategories are listed together with searchable, paginated rows.
 						</div>
 					</div>
-					<div className="admin-actions-row" style={{ marginLeft: 'auto' }}>
-						<button className="admin-action-btn" onClick={openAddModal} type="button">
-							+ Add category
-						</button>
+					<div className="admin-category-toolbar">
+						<input
+							className="admin-field admin-category-search"
+							type="search"
+							value={searchTerm}
+							onChange={(event) => setSearchTerm(event.target.value)}
+							placeholder="Search by title, parent, status"
+						/>
+						<div className="admin-category-toolbar-actions">
+							<button className="admin-action-btn" onClick={openAddModal} type="button">
+								+ Add category
+							</button>
+							<button className="admin-action-btn admin-action-btn--ghost" onClick={refetch} type="button">
+								Refresh
+							</button>
+						</div>
 					</div>
 				</div>
 
-				<div className="admin-category-grid">
-					{categoryCards.map((item) => (
-						<button
-							className={`admin-category-card ${item.accent} ${selectedCategoryId === item.key ? 'is-active' : ''}`}
-							key={item.key}
-							onClick={() => setSelectedCategoryId(item.key)}
-							type="button"
-						>
-							<div className="admin-category-card-top">
-								<div>
-									<div className="admin-category-card-label">Parent category</div>
-									<div className="admin-category-card-title">{item.title}</div>
-								</div>
-								<div className="admin-category-card-meta">
-									<div className="admin-category-card-actions admin-action-menu-wrap" onClick={(event) => event.stopPropagation()}>
-										<button
-											className="admin-icon-btn admin-icon-btn--compact admin-icon-btn--ghost admin-kebab-btn"
-											onClick={(event) => toggleActionMenu(event, { type: 'parent', id: item.key })}
-											type="button"
-											aria-label={`Actions for ${item.title}`}
-											title={`Actions for ${item.title}`}
-										>
-											<span className="admin-kebab-dots" aria-hidden="true">
-												<span />
-												<span />
-												<span />
+				<div className="">
+					<table className="admin-table">
+						<thead>
+							<tr>
+								<th>Title</th>
+								<th>Parent</th>
+								<th>Status</th>
+								<th>Created At</th>
+								<th>Updated At</th>
+								<th>Actions</th>
+							</tr>
+						</thead>
+						<tbody>
+							{paginatedRows.length ? (
+								paginatedRows.map((row) => (
+									<tr key={row.rowKey}>
+										<td>
+											<strong>{row.title}</strong>
+										</td>
+										<td>
+											{row.parentTitle === '--' ? (
+												<span className="admin-status admin-status--neutral">Parent</span>
+											) : (
+												row.parentTitle
+											)}
+										</td>
+										<td>
+											<span className={`admin-status admin-status--${row.status === 'active' ? 'success' : 'warning'}`}>
+												{row.status}
 											</span>
-										</button>
-										{isMenuOpen({ type: 'parent', id: item.key }) ? (
-											<div className="admin-action-menu">
-												<button className="admin-action-menu-item" onClick={(event) => handleEditParentClick(event, item.key)} type="button">
-													Edit
+										</td>
+										<td>{formatDate(row.createdAt)}</td>
+										<td>{formatDate(row.updatedAt)}</td>
+										<td>
+											<div className="admin-action-menu-wrap">
+												<button
+													className="admin-icon-btn admin-icon-btn--compact admin-icon-btn--ghost admin-kebab-btn"
+													onClick={(event) =>
+														toggleActionMenu(
+															event,
+															row.type === 'parent'
+																? { type: 'parent', id: row.id }
+																: { type: 'subcategory', parentId: row.parentId, id: row.id },
+														)
+													}
+													type="button"
+													aria-label={`Actions for ${row.title}`}
+													title={`Actions for ${row.title}`}
+												>
+													<span className="admin-kebab-dots" aria-hidden="true">
+														<span />
+														<span />
+														<span />
+													</span>
 												</button>
-												<button className="admin-action-menu-item admin-action-menu-item--danger" onClick={(event) => {
-													event.stopPropagation();
-													handleRemoveParentCategory(item.key);
-												}} type="button">
-													Delete
-												</button>
+												{isMenuOpen(
+													row.type === 'parent'
+														? { type: 'parent', id: row.id }
+														: { type: 'subcategory', parentId: row.parentId, id: row.id },
+												) ? (
+													<div className="admin-action-menu">
+														<button
+															className="admin-action-menu-item"
+															onClick={(event) =>
+																row.type === 'parent'
+																	? handleEditParentClick(event, row.id)
+																	: handleEditSubcategoryClick(event, row.parentId, row.id)
+															}
+															type="button"
+														>
+															Edit
+														</button>
+														<button
+															className="admin-action-menu-item admin-action-menu-item--danger"
+															onClick={(event) => {
+																event.stopPropagation();
+																if (row.type === 'parent') {
+																	handleRemoveParentCategory(row.id);
+																	return;
+																}
+																handleRemoveSubcategory(row.parentId, row.id);
+															}}
+															type="button"
+														>
+															Delete
+														</button>
+													</div>
+												) : null}
 											</div>
-										) : null}
-									</div>
-								</div>
-							</div>
-							<div className="admin-category-card-copy">{item.subtitle}</div>
-						</button>
-					))}
+										</td>
+									</tr>
+								))
+							) : (
+								<tr>
+									<td colSpan={6}>
+										<div className="admin-preview-copy">No categories matched your search.</div>
+									</td>
+								</tr>
+							)}
+						</tbody>
+					</table>
 				</div>
 
-				<div className="admin-create-layout admin-category-layout">
-					<div className="admin-card" style={{ padding: '18px' }}>
-						<div className="admin-form-section-title">Sub categories</div>
-						{selectedCategory ? (
-							<>
-								<div className="admin-preview-copy" style={{ marginTop: '16px' }}>
-									Subcategories stay managed here. Add new ones from the modal, edit any row, or remove them when they are no longer needed.
-								</div>
-								<div className="admin-subcategory-list">
-									{selectedCategory.subcategories.length ? (
-										selectedCategory.subcategories.map((subcategory) => (
-											<div className="admin-list-item admin-subcategory-item" key={subcategory.id}>
-												<div className="admin-list-copy">
-													<div className="admin-list-title">{subcategory.title}</div>
-												</div>
-												<div className="admin-list-actions">
-																										<span className={`admin-status admin-status--${subcategory.status === 'active' ? 'success' : 'warning'}`}>
-														{subcategory.status}
-													</span>
-													<div className="admin-action-menu-wrap" onClick={(event) => event.stopPropagation()}>
-														<button
-															className="admin-icon-btn admin-icon-btn--compact admin-icon-btn--ghost admin-kebab-btn"
-															onClick={(event) => toggleActionMenu(event, { type: 'subcategory', parentId: selectedCategory.id, id: subcategory.id })}
-															type="button"
-															aria-label={`Actions for ${subcategory.title}`}
-															title={`Actions for ${subcategory.title}`}
-														>
-															<span className="admin-kebab-dots" aria-hidden="true">
-																<span />
-																<span />
-																<span />
-															</span>
-														</button>
-														{isMenuOpen({ type: 'subcategory', parentId: selectedCategory.id, id: subcategory.id }) ? (
-															<div className="admin-action-menu">
-																<button className="admin-action-menu-item" onClick={(event) => handleEditSubcategoryClick(event, selectedCategory.id, subcategory.id)} type="button">
-																	Edit
-																</button>
-																<button className="admin-action-menu-item admin-action-menu-item--danger" onClick={(event) => {
-																	event.stopPropagation();
-																	handleRemoveSubcategory(subcategory.id);
-																}} type="button">
-																	Delete
-																</button>
-															</div>
-														) : null}
-													</div>
-
-												</div>
-											</div>
-										))
-									) : (
-										<div className="admin-placeholder admin-placeholder--compact">
-											<div>
-												<strong>No subcategories</strong>
-												<div>This parent category does not have any subcategories yet.</div>
-											</div>
-										</div>
-									)}
-								</div>
-							</>
-						) : null}
+				<div className="admin-pagination-row">
+					<div className="admin-preview-copy">
+						Showing {paginatedRows.length ? (currentPage - 1) * pageSize + 1 : 0}-{Math.min(currentPage * pageSize, filteredRows.length)} of {filteredRows.length}
 					</div>
-
-					<div className="admin-card" style={{ padding: '18px' }}>
-						<div className="admin-form-section-title">Structure snapshot</div>
-						<div className="admin-placeholder admin-placeholder--compact">
-							<div>
-								<strong>{selectedCategory?.title || 'Selected Category'} </strong>
-								<div>{selectedCategory?.subcategories?.length || 0} subcategories - {selectedCategory?.status || 'Unknown'}</div>
-							</div>
-						</div>
-
-						<div className="admin-preview-copy" style={{ marginTop: '16px' }}>
-							This shows a quick snapshot of the currently selected category. It is not editable, but it gives you an overview of the category details while you manage the structure on the left.
-						</div>
+					<div className="admin-pagination-controls">
+						<button
+							className="admin-action-btn admin-action-btn--ghost"
+							type="button"
+							onClick={() => setCurrentPage((previous) => Math.max(1, previous - 1))}
+							disabled={currentPage === 1}
+						>
+							Prev
+						</button>
+						<span className="admin-status admin-status--neutral">
+							Page {currentPage} / {totalPages}
+						</span>
+						<button
+							className="admin-action-btn admin-action-btn--ghost"
+							type="button"
+							onClick={() => setCurrentPage((previous) => Math.min(totalPages, previous + 1))}
+							disabled={currentPage >= totalPages}
+						>
+							Next
+						</button>
 					</div>
 				</div>
 			</section>
@@ -641,8 +779,8 @@ export default function AdminCategories() {
 											type: 'subcategory',
 											parentId:
 												editingTarget?.type === 'parent'
-													? categories.find((item) => item.id !== editingTarget.id)?.id || previous.parentId || selectedCategory?.id || 'supplement'
-													: previous.parentId || selectedCategory?.id || categories[0]?.id || 'supplement',
+														? categories.find((item) => item.id !== editingTarget.id)?.id || previous.parentId || selectedCategory?.id || categories[0]?.id || ''
+														: previous.parentId || selectedCategory?.id || categories[0]?.id || '',
 										}))}
 										type="button"
 									>
