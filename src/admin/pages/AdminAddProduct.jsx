@@ -1,15 +1,51 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuill } from 'react-quilljs';
+import 'quill/dist/quill.snow.css';
 import useProducts from '../../hooks/useProducts';
+import useCategories from '../../hooks/useCategories';
 import { getProduct } from '../../services/productsService';
 import AdminLayout from '../layouts/AdminLayout';
+
+const editorModules = {
+  toolbar: [
+    [{ header: [1, 2, 3, false] }],
+    ['bold', 'italic', 'underline', 'strike'],
+    [{ align: [] }],
+    [{ list: 'ordered' }, { list: 'bullet' }],
+    ['blockquote', 'link', 'image'],
+    ['clean'],
+  ],
+};
+
+const editorFormats = [
+  'header',
+  'bold',
+  'italic',
+  'underline',
+  'strike',
+  'align',
+  'list',
+  'bullet',
+  'blockquote',
+  'link',
+  'image',
+];
+
+const getTextFromHtml = (html) =>
+  String(html || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
 
 export default function AdminAddProduct() {
   const navigate = useNavigate();
   const { productId } = useParams();
   const isEditMode = Boolean(productId);
   const { addProduct, editProduct } = useProducts();
+  const { categories, isLoading: isCategoriesLoading } = useCategories();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(isEditMode);
 
@@ -25,6 +61,26 @@ export default function AdminAddProduct() {
   const [summary, setSummary] = useState('');
   const [description, setDescription] = useState('');
   const [additionalInfo, setAdditionalInfo] = useState('');
+  const [descriptionEditorMode, setDescriptionEditorMode] = useState('visual');
+  const [additionalInfoEditorMode, setAdditionalInfoEditorMode] = useState('visual');
+
+  const {
+    quill: descriptionQuill,
+    quillRef: descriptionEditorRef,
+  } = useQuill({
+    modules: editorModules,
+    formats: editorFormats,
+    placeholder: 'Full product description, ingredients, usage details...',
+  });
+
+  const {
+    quill: additionalInfoQuill,
+    quillRef: additionalInfoEditorRef,
+  } = useQuill({
+    modules: editorModules,
+    formats: editorFormats,
+    placeholder: 'Additional details like warnings, certifications, etc...',
+  });
 
   // Product Flags
   const [isActive, setIsActive] = useState(1);
@@ -36,6 +92,7 @@ export default function AdminAddProduct() {
   const [mainImage, setMainImage] = useState(null);
   const [mainImageIndex, setMainImageIndex] = useState(0);
   const [galleryImages, setGalleryImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
 
   const mainPreview = useMemo(() => {
     if (!mainImage) {
@@ -55,6 +112,48 @@ export default function AdminAddProduct() {
       ...galleryImages,
     ],
     [mainImage, galleryImages],
+  );
+
+  const existingMainImageIndex = useMemo(() => {
+    if (!existingImages.length) {
+      return -1;
+    }
+
+    const mainIndex = existingImages.findIndex((image) => Number(image?.is_main || 0) === 1);
+    return mainIndex >= 0 ? mainIndex : 0;
+  }, [existingImages]);
+
+  const existingMainImage = useMemo(() => {
+    if (existingMainImageIndex < 0) {
+      return null;
+    }
+    return existingImages[existingMainImageIndex] || null;
+  }, [existingImages, existingMainImageIndex]);
+
+  const existingGalleryImages = useMemo(
+    () => existingImages.filter((_, index) => index !== existingMainImageIndex),
+    [existingImages, existingMainImageIndex],
+  );
+
+  const displayedMainPreview = mainPreview || existingMainImage?.image || '';
+  const hasAtLeastOneImage = allImages.length > 0 || existingImages.length > 0;
+  const totalDisplayedImages = allImages.length + existingImages.length;
+  const categoryOptions = useMemo(
+    () =>
+      (categories || []).flatMap((parent) => {
+        const parentOption = {
+          id: parent.id,
+          label: parent.title,
+        };
+
+        const subcategoryOptions = (parent.subcategories || []).map((child) => ({
+          id: child.id,
+          label: `${child.title}`,
+        }));
+
+        return [parentOption, ...subcategoryOptions];
+      }),
+    [categories],
   );
 
   // Fetch product data when in edit mode
@@ -78,7 +177,7 @@ export default function AdminAddProduct() {
             setBestSeller(product.best_seller ? 1 : 0);
             setIsFeatured(product.is_featured ? 1 : 0);
             setClearance(product.clearance ? 1 : 0);
-            // Note: Images are not pre-populated; user must re-upload to change them
+            setExistingImages(Array.isArray(product.images) ? product.images : []);
           }
         } catch (err) {
           toast.error('Failed to load product. ' + (err?.message || ''));
@@ -110,6 +209,7 @@ export default function AdminAddProduct() {
     if (file) {
       setMainImageIndex(0);
     }
+    event.target.value = '';
   };
 
   const onGalleryImagesChange = (event) => {
@@ -124,6 +224,96 @@ export default function AdminAddProduct() {
   const removeGalleryImage = (index) => {
     setGalleryImages((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const insertImageIntoEditor = (editor) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) {
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const range = editor.getSelection(true);
+        const insertAt = range?.index ?? editor.getLength();
+        editor.insertEmbed(insertAt, 'image', reader.result, 'user');
+        editor.setSelection(insertAt + 1, 0);
+      };
+      reader.readAsDataURL(file);
+    };
+
+    input.click();
+  };
+
+  useEffect(() => {
+    if (!descriptionQuill) {
+      return;
+    }
+
+    const toolbar = descriptionQuill.getModule('toolbar');
+    toolbar.addHandler('image', () => insertImageIntoEditor(descriptionQuill));
+
+    const syncDescription = () => {
+      setDescription(descriptionQuill.root.innerHTML);
+    };
+
+    descriptionQuill.on('text-change', syncDescription);
+    return () => {
+      descriptionQuill.off('text-change', syncDescription);
+    };
+  }, [descriptionQuill]);
+
+  useEffect(() => {
+    if (!additionalInfoQuill) {
+      return;
+    }
+
+    const toolbar = additionalInfoQuill.getModule('toolbar');
+    toolbar.addHandler('image', () => insertImageIntoEditor(additionalInfoQuill));
+
+    const syncAdditionalInfo = () => {
+      setAdditionalInfo(additionalInfoQuill.root.innerHTML);
+    };
+
+    additionalInfoQuill.on('text-change', syncAdditionalInfo);
+    return () => {
+      additionalInfoQuill.off('text-change', syncAdditionalInfo);
+    };
+  }, [additionalInfoQuill]);
+
+  useEffect(() => {
+    if (!descriptionQuill) {
+      return;
+    }
+
+    const html = description || '';
+    if (descriptionQuill.root.innerHTML !== html) {
+      descriptionQuill.root.innerHTML = html;
+    }
+  }, [descriptionQuill, description]);
+
+  useEffect(() => {
+    if (!additionalInfoQuill) {
+      return;
+    }
+
+    const html = additionalInfo || '';
+    if (additionalInfoQuill.root.innerHTML !== html) {
+      additionalInfoQuill.root.innerHTML = html;
+    }
+  }, [additionalInfoQuill, additionalInfo]);
+
+  useEffect(() => {
+    if (descriptionQuill) {
+      descriptionQuill.enable(!isSubmitting);
+    }
+    if (additionalInfoQuill) {
+      additionalInfoQuill.enable(!isSubmitting);
+    }
+  }, [descriptionQuill, additionalInfoQuill, isSubmitting]);
 
   const validateForm = () => {
     const errors = [];
@@ -146,13 +336,13 @@ export default function AdminAddProduct() {
     if (!summary.trim()) {
       errors.push('Summary is required');
     }
-    if (!description.trim()) {
+    if (!getTextFromHtml(description)) {
       errors.push('Description is required');
     }
-    if (!additionalInfo.trim()) {
+    if (!getTextFromHtml(additionalInfo)) {
       errors.push('Additional info is required');
     }
-    if (allImages.length === 0) {
+    if (!hasAtLeastOneImage) {
       errors.push('At least one image is required');
     }
 
@@ -262,17 +452,22 @@ export default function AdminAddProduct() {
               <div className="admin-form-section-title">Basic Information</div>
               <div className="admin-form-grid">
                 <div className="admin-field-group">
-                  <label className="admin-field-label" htmlFor="categoryId">Category ID *</label>
-                  <input
+                  <label className="admin-field-label" htmlFor="categoryId">Category *</label>
+                  <select
                     className="admin-field"
                     id="categoryId"
-                    placeholder="Ex: 1"
-                    type="number"
                     value={categoryId}
                     onChange={(event) => setCategoryId(event.target.value)}
                     required
-                    disabled={isSubmitting}
-                  />
+                    disabled={isSubmitting || isCategoriesLoading}
+                  >
+                    <option value="">Select category</option>
+                    {categoryOptions.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className="admin-field-group">
@@ -361,30 +556,78 @@ export default function AdminAddProduct() {
                   />
                 </div>
 
-                <div className="admin-field-group admin-field-group--full">
-                  <label className="admin-field-label" htmlFor="description">Description *</label>
-                  <textarea
-                    className="admin-field admin-field--textarea"
-                    id="description"
-                    placeholder="Full product description, ingredients, usage details..."
-                    value={description}
-                    onChange={(event) => setDescription(event.target.value)}
-                    required
-                    disabled={isSubmitting}
-                  />
+                <div className="admin-field-group admin-field-group--full ">
+                  <div className="admin-rich-editor-head">
+                    <label className="admin-field-label" htmlFor="description">Description *</label>
+                    <div className="admin-rich-editor-mode" role="tablist" aria-label="Description editor mode">
+                      <button
+                        className={`admin-toggle-btn ${descriptionEditorMode === 'visual' ? 'is-active' : ''}`}
+                        type="button"
+                        onClick={() => setDescriptionEditorMode('visual')}
+                        disabled={isSubmitting}
+                      >
+                        Visual
+                      </button>
+                      <button
+                        className={`admin-toggle-btn ${descriptionEditorMode === 'html' ? 'is-active' : ''}`}
+                        type="button"
+                        onClick={() => setDescriptionEditorMode('html')}
+                        disabled={isSubmitting}
+                      >
+                        HTML
+                      </button>
+                    </div>
+                  </div>
+                  {descriptionEditorMode === 'visual' ? (
+                    <div className="admin-rich-editor" id="description">
+                      <div ref={descriptionEditorRef} />
+                    </div>
+                  ) : (
+                    <textarea
+                      className="admin-field admin-field--textarea admin-html-source"
+                      value={description}
+                      onChange={(event) => setDescription(event.target.value)}
+                      placeholder="Write or paste HTML here..."
+                      disabled={isSubmitting}
+                    />
+                  )}
                 </div>
 
                 <div className="admin-field-group admin-field-group--full">
-                  <label className="admin-field-label" htmlFor="additionalInfo">Additional Information *</label>
-                  <textarea
-                    className="admin-field admin-field--textarea admin-field--small"
-                    id="additionalInfo"
-                    placeholder="Additional details like warnings, certifications, etc..."
-                    value={additionalInfo}
-                    onChange={(event) => setAdditionalInfo(event.target.value)}
-                    required
-                    disabled={isSubmitting}
-                  />
+                  <div className="admin-rich-editor-head">
+                    <label className="admin-field-label" htmlFor="additionalInfo">Additional Information *</label>
+                    <div className="admin-rich-editor-mode" role="tablist" aria-label="Additional information editor mode">
+                      <button
+                        className={`admin-toggle-btn ${additionalInfoEditorMode === 'visual' ? 'is-active' : ''}`}
+                        type="button"
+                        onClick={() => setAdditionalInfoEditorMode('visual')}
+                        disabled={isSubmitting}
+                      >
+                        Visual
+                      </button>
+                      <button
+                        className={`admin-toggle-btn ${additionalInfoEditorMode === 'html' ? 'is-active' : ''}`}
+                        type="button"
+                        onClick={() => setAdditionalInfoEditorMode('html')}
+                        disabled={isSubmitting}
+                      >
+                        HTML
+                      </button>
+                    </div>
+                  </div>
+                  {additionalInfoEditorMode === 'visual' ? (
+                    <div className="admin-rich-editor admin-rich-editor--small" id="additionalInfo">
+                      <div ref={additionalInfoEditorRef} />
+                    </div>
+                  ) : (
+                    <textarea
+                      className="admin-field admin-field--textarea admin-field--small admin-html-source"
+                      value={additionalInfo}
+                      onChange={(event) => setAdditionalInfo(event.target.value)}
+                      placeholder="Write or paste HTML here..."
+                      disabled={isSubmitting}
+                    />
+                  )}
                 </div>
               </div>
             </div>
@@ -457,8 +700,8 @@ export default function AdminAddProduct() {
                   onChange={onMainImageChange}
                   disabled={isSubmitting}
                 />
-                {mainPreview ? (
-                  <img alt="Main product preview" className="admin-thumb-preview" src={mainPreview} />
+                {displayedMainPreview ? (
+                  <img alt="Main product preview" className="admin-thumb-preview" src={displayedMainPreview} />
                 ) : (
                   <div className="admin-inline-note">Upload a main product image.</div>
                 )}
@@ -477,20 +720,28 @@ export default function AdminAddProduct() {
                 />
 
                 <div className="admin-gallery-grid">
-                  {galleryPreviews.length ? (
-                    galleryPreviews.map(({ file, src }, index) => (
-                      <div className="admin-gallery-item" key={`${file.name}-${index}`}>
-                        <img alt={file.name} src={src} />
-                        <button
-                          className="admin-gallery-remove"
-                          onClick={() => removeGalleryImage(index)}
-                          type="button"
-                          disabled={isSubmitting}
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))
+                  {existingGalleryImages.length || galleryPreviews.length ? (
+                    <>
+                      {existingGalleryImages.map((image, index) => (
+                        <div className="admin-gallery-item" key={`existing-${image.id || index}`}>
+                          <img alt={`Existing image ${index + 1}`} src={image.image} />
+                          <div className="admin-inline-note" style={{ padding: '8px 10px' }}>Existing image</div>
+                        </div>
+                      ))}
+                      {galleryPreviews.map(({ file, src }, index) => (
+                        <div className="admin-gallery-item" key={`${file.name}-${index}`}>
+                          <img alt={file.name} src={src} />
+                          <button
+                            className="admin-gallery-remove"
+                            onClick={() => removeGalleryImage(index)}
+                            type="button"
+                            disabled={isSubmitting}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      ))}
+                    </>
                   ) : (
                     <div className="admin-inline-note">Add additional product images (optional).</div>
                   )}
@@ -498,7 +749,7 @@ export default function AdminAddProduct() {
               </div>
 
               <div className="admin-inline-note">
-                Total images: {allImages.length} (Main: 1 + Gallery: {galleryImages.length})
+                Total images: {totalDisplayedImages} (Existing: {existingImages.length}, New: {allImages.length})
               </div>
             </div>
           </div>

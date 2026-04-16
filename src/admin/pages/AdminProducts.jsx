@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import DOMPurify from 'dompurify';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import useProducts from '../../hooks/useProducts';
@@ -56,6 +57,13 @@ const formatCurrency = (value) => {
 	return `$${amount.toFixed(2)}`;
 };
 
+const stripHtml = (value) =>
+	String(value || '')
+		.replace(/<[^>]*>/g, ' ')
+		.replace(/&nbsp;/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim();
+
 const getStatusMeta = (product) => {
 	if (!product?.isActive) {
 		return { label: 'Inactive', className: 'admin-status--neutral' };
@@ -112,6 +120,14 @@ export default function AdminProducts() {
 	const visibleImage = selectedProduct?.images?.find((image) => image.isMain === 1) || selectedProduct?.images?.[0] || null;
 	const selectedStatus = getStatusMeta(selectedProduct || {});
 	const isPreviewOpen = !!selectedProduct;
+	const safeDescriptionHtml = useMemo(
+		() => DOMPurify.sanitize(String(selectedProduct?.description || ''), { USE_PROFILES: { html: true } }),
+		[selectedProduct?.description],
+	);
+	const safeAdditionalInfoHtml = useMemo(
+		() => DOMPurify.sanitize(String(selectedProduct?.additionalInfo || ''), { USE_PROFILES: { html: true } }),
+		[selectedProduct?.additionalInfo],
+	);
 
 	useEffect(() => {
 		if (!error) {
@@ -286,7 +302,7 @@ export default function AdminProducts() {
 												<tr key={product.id} onClick={() => handlePreviewProduct(product.id)} className={isSelected ? 'is-active' : ''}>
 													<td data-label="Name">
 														<strong>{product.name}</strong>
-														<div className="admin-preview-copy">{product.summary}</div>
+														<div className="admin-preview-copy">{stripHtml(product.summary)}</div>
 													</td>
 													<td data-label="Price">{formatCurrency(product.price)}</td>
 													<td data-label="Qty">{product.quantity}</td>
@@ -390,9 +406,9 @@ export default function AdminProducts() {
 									<div>SKU: {selectedProduct?.sku}</div>
 									<div>Status: {selectedStatus.label}</div>
 									<div>Gender: {selectedProduct?.gender}</div>
-									<div style={{ marginTop: '10px' }}>{selectedProduct?.summary}</div>
-									<div style={{ marginTop: '10px' }}>{selectedProduct?.description}</div>
-									<div style={{ marginTop: '10px' }}>{selectedProduct?.additionalInfo}</div>
+													<div style={{ marginTop: '10px' }}>{stripHtml(selectedProduct?.summary)}</div>
+													<div className="admin-rich-content" style={{ marginTop: '12px' }} dangerouslySetInnerHTML={{ __html: safeDescriptionHtml }} />
+													<div className="admin-rich-content" style={{ marginTop: '12px' }} dangerouslySetInnerHTML={{ __html: safeAdditionalInfoHtml }} />
 								</div>
 							</div>
 
