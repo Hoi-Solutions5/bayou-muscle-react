@@ -67,42 +67,44 @@ export default function AdminDashboard() {
             <div className="admin-chip">Preview only</div>
           </div>
 
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Order</th>
-                <th>Product</th>
-                <th>Status</th>
-                <th>Placed</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentOrders.map(([order, product, status, placed]) => (
-                <tr key={order}>
-                  <td>
-                    <strong>{order}</strong>
-                  </td>
-                  <td>{product}</td>
-                  <td>
-                    <span
-                      className={`admin-status ${
-                        status === 'Paid'
-                          ? 'admin-status--success'
-                          : status === 'Pending'
-                            ? 'admin-status--warning'
-                            : status === 'Shipped'
-                              ? 'admin-status--neutral'
-                              : 'admin-status--warning'
-                      }`}
-                    >
-                      {status}
-                    </span>
-                  </td>
-                  <td>{placed}</td>
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Order</th>
+                  <th>Product</th>
+                  <th>Status</th>
+                  <th>Placed</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {recentOrders.map(([order, product, status, placed]) => (
+                  <tr key={order}>
+                    <td>
+                      <strong>{order}</strong>
+                    </td>
+                    <td>{product}</td>
+                    <td>
+                      <span
+                        className={`admin-status ${
+                          status === 'Paid'
+                            ? 'admin-status--success'
+                            : status === 'Pending'
+                              ? 'admin-status--warning'
+                              : status === 'Shipped'
+                                ? 'admin-status--neutral'
+                                : 'admin-status--warning'
+                        }`}
+                      >
+                        {status}
+                      </span>
+                    </td>
+                    <td>{placed}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </article>
 
         <article className="admin-card">

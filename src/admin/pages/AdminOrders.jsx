@@ -20,44 +20,46 @@ export default function AdminOrders() {
           <div className="admin-chip">4 recent orders</div>
         </div>
 
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>Order</th>
-              <th>Status</th>
-              <th>Item</th>
-              <th>Total</th>
-              <th>Qty</th>
-            </tr>
-          </thead>
-          <tbody>
-            {orders.map(([order, status, item, total, qty]) => (
-              <tr key={order}>
-                <td>
-                  <strong>{order}</strong>
-                </td>
-                <td>
-                  <span
-                    className={`admin-status ${
-                      status === 'Paid'
-                        ? 'admin-status--success'
-                        : status === 'Pending'
-                          ? 'admin-status--warning'
-                          : status === 'Shipped'
-                            ? 'admin-status--neutral'
-                            : 'admin-status--warning'
-                    }`}
-                  >
-                    {status}
-                  </span>
-                </td>
-                <td>{item}</td>
-                <td>{total}</td>
-                <td>{qty}</td>
+        <div className="admin-table-wrap">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Status</th>
+                <th>Item</th>
+                <th>Total</th>
+                <th>Qty</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {orders.map(([order, status, item, total, qty]) => (
+                <tr key={order}>
+                  <td>
+                    <strong>{order}</strong>
+                  </td>
+                  <td>
+                    <span
+                      className={`admin-status ${
+                        status === 'Paid'
+                          ? 'admin-status--success'
+                          : status === 'Pending'
+                            ? 'admin-status--warning'
+                            : status === 'Shipped'
+                              ? 'admin-status--neutral'
+                              : 'admin-status--warning'
+                      }`}
+                    >
+                      {status}
+                    </span>
+                  </td>
+                  <td>{item}</td>
+                  <td>{total}</td>
+                  <td>{qty}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         <div className="admin-grid admin-grid--two" style={{ marginTop: '20px' }}>
           <div className="admin-list">
