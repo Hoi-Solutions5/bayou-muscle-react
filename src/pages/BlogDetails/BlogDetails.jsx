@@ -1,4 +1,4 @@
-import "../Blog/Blog.css";
+import "../Blog/blog.css";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import Marquee from "../../components/Marquee";

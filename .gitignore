@@ -1,13 +1,7 @@
-<<<<<<< HEAD
-node_modules
-=======
->>>>>>> 7243dfb060c0fc57d4334f3b119ef8b722ea25f2
 node_modules/
 dist/
 build/
 .env
-<<<<<<< HEAD
-=======
 node_modules
 node_modules/
->>>>>>> 7243dfb060c0fc57d4334f3b119ef8b722ea25f2
+git 
