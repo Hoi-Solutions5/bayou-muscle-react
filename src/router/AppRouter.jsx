@@ -15,7 +15,13 @@ import AdminSettings from '../admin/pages/AdminSettings';
 import AdminCategories from '../admin/pages/AdminCategories';
 import AdminDiscounts from '../admin/pages/AdminDiscounts';
 import AdminLogin from '../admin/pages/AdminLogin'; 
+import AdminReviews from '../admin/pages/AdminReviews';
+import AdminBlogs from '../admin/pages/AdminBlogs';
+import AdminBlogDetails from '../admin/pages/AdminBlogDetails';
+import AdminAddBlogs from '../admin/pages/AdminAddBlogs';
+import AdminBlogCategory from '../admin/pages/AdminBlogCategory';
 import ProtectedRoute from '../components/ProtectedRoute';
+
 
 export default function AppRouter() {
 	const navigate = useNavigate();
@@ -50,6 +56,12 @@ export default function AppRouter() {
 			<Route path="/admin/categories" element={<ProtectedRoute><AdminCategories /></ProtectedRoute>} />
 			<Route path="/admin/discounts" element={<ProtectedRoute><AdminDiscounts /></ProtectedRoute>} />
 			<Route path="/admin/login" element={<AdminLogin />} />
+			<Route path="/admin/reviews" element={<ProtectedRoute><AdminReviews /></ProtectedRoute>} />
+			<Route path="/admin/blogs" element={<ProtectedRoute><AdminBlogs /></ProtectedRoute>} />
+			<Route path="/admin/blogs/add" element={<ProtectedRoute><AdminAddBlogs /></ProtectedRoute>} />
+			<Route path="/admin/blogs/:blogId" element={<ProtectedRoute><AdminBlogDetails /></ProtectedRoute>} />
+			<Route path="/admin/blogs/:blogId/edit" element={<ProtectedRoute><AdminAddBlogs /></ProtectedRoute>} />
+			<Route path="/admin/blog-categories" element={<ProtectedRoute><AdminBlogCategory /></ProtectedRoute>} />
 			<Route path="*" element={<Navigate to="/home" replace />} />
 		</Routes>
 	);

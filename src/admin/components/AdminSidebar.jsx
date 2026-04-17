@@ -14,6 +14,8 @@ export default function AdminSidebar({ isDrawerOpen, onClose }) {
     ['Settings'],
     ['Categories'],
     ['Discounts'],
+    ['Reviews'],
+    ['Blogs'],
   ];
 
   const handleLogout = async () => {
