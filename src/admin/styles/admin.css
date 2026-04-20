@@ -1137,6 +1137,18 @@
   font-style: normal;
 }
 
+.admin-hidden {
+  display: none !important;
+}
+
+.admin-quill-host {
+  min-height: 220px;
+}
+
+.admin-quill-host--small {
+  min-height: 150px;
+}
+
 .admin-inline-field {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -1169,6 +1181,54 @@
 .admin-inline-note {
   font-size: 12px;
   color: var(--admin-soft);
+}
+
+.admin-inline-note--padded {
+  padding: 8px 10px;
+}
+
+.admin-product-form {
+  display: grid;
+  gap: 16px;
+}
+
+.admin-product-form-layout {
+  margin-top: 4px;
+}
+
+.admin-form-panel {
+  padding: 18px;
+}
+
+.admin-product-form-actions {
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.admin-flag-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.admin-check-card {
+  min-height: 44px;
+  border: 1px solid var(--admin-border);
+  border-radius: 12px;
+  background: var(--admin-white);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  color: var(--admin-black);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-check-card input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--admin-gold);
 }
 
 .admin-upload-block {
@@ -1249,6 +1309,63 @@
 
 .admin-preview-copy--muted {
   color: var(--admin-muted);
+}
+
+.admin-product-flag-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-start;
+}
+
+.admin-product-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-white);
+  padding: 5px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.admin-product-flag-label {
+  color: var(--admin-black);
+}
+
+.admin-product-flag-icon {
+  color: #d9a200;
+  font-size: 12px;
+}
+
+.admin-product-flag--none {
+  color: var(--admin-soft);
+  border-style: dashed;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.admin-product-flag--best-seller {
+  background: linear-gradient(180deg, #fff5c4, #ffe78d);
+  border-color: #e1c35c;
+}
+
+.admin-product-flag--featured {
+  background: rgba(255, 255, 255, 0.94);
+  border-color: rgba(221, 202, 138, 0.9);
+}
+
+.admin-product-flag--clearance {
+  background: rgba(198, 61, 11, 0.1);
+  border-color: rgba(198, 61, 11, 0.34);
+}
+
+.admin-product-flag--active {
+  background: rgba(46, 125, 50, 0.1);
+  border-color: rgba(46, 125, 50, 0.32);
 }
 
 .admin-status-control {
@@ -1935,6 +2052,10 @@
   }
 
   .admin-toggle-group {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-flag-grid {
     grid-template-columns: 1fr;
   }
 

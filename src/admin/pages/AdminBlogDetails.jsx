@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import useBlogs from '../../hooks/useBlogs';
 import AdminLayout from '../layouts/AdminLayout';
+import '../styles/admin-blog-details.css';
 
 const formatDateTime = (value) => {
 	if (!value) {
@@ -116,14 +117,14 @@ export default function AdminBlogDetails() {
 
 	return (
 		<AdminLayout title="Blog Details" subtitle="Complete blog content and metadata.">
-			<section className="admin-card admin-blog-detail-card">
+			<section className="admin-card admin-blog-detail-card admin-blog-detail-card--polished">
 				<div className="admin-card-head admin-blog-detail-head">
-					<div>
+					<div className="admin-blog-heading">
 						<div className="admin-card-kicker">Blog</div>
-						<div className="admin-card-title">{blog.title}</div>
-						<div className="admin-card-subtitle">Slug: {blog.slug || '--'}</div>
+						<div className="admin-card-title admin-blog-title">{blog.title}</div>
+						<div className="admin-card-subtitle admin-blog-subtitle">Slug: {blog.slug || '--'}</div>
 					</div>
-					<div className="admin-actions-row">
+					<div className="admin-actions-row admin-blog-actions-row">
 						<span className={`admin-status ${statusMeta.className}`}>{statusMeta.label}</span>
 						<button className="admin-action-btn admin-action-btn--ghost" type="button" onClick={() => navigate(`/admin/blogs/${blog.id}/edit`)}>
 							Edit Blog
@@ -150,19 +151,24 @@ export default function AdminBlogDetails() {
 						)}
 
 						<article className="admin-blog-content">
-							<h3 className="admin-form-section-title">Summary</h3>
-							<p className="admin-preview-copy">{blog.summary || '--'}</p>
+							<section className="admin-blog-section">
+								<h3 className="admin-form-section-title">Summary</h3>
+								<p className="admin-blog-summary-copy">{blog.summary || '--'}</p>
+							</section>
 
-							<h3 className="admin-form-section-title">Description</h3>
-							{safeDescriptionHtml ? (
-								<div className="admin-rich-content" dangerouslySetInnerHTML={{ __html: safeDescriptionHtml }} />
-							) : (
-								<div className="admin-blog-long-text">{blog.description || '--'}</div>
-							)}
+							<section className="admin-blog-section admin-blog-section--description">
+								<h3 className="admin-form-section-title">Description</h3>
+								{safeDescriptionHtml ? (
+									<div className="admin-rich-content admin-blog-rich-content" dangerouslySetInnerHTML={{ __html: safeDescriptionHtml }} />
+								) : (
+									<div className="admin-blog-long-text">{blog.description || '--'}</div>
+								)}
+							</section>
 						</article>
 					</div>
 
 					<aside className="admin-blog-meta-panel">
+						<div className="admin-blog-meta-title">Meta</div>
 						<div className="admin-blog-meta-item">
 							<div className="admin-card-kicker">Blog ID</div>
 							<div className="admin-list-title">#{blog.id}</div>
