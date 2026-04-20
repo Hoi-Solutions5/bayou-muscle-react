@@ -318,18 +318,16 @@ export default function Home() {
         <div className="hm-hero__overlay" />
         <div className="hm-hero__content">
           <h1 className="hm-hero__title">
-            Hard Work
-            <br />
-            Creates Strength.
+           <img src="/blogs/work.png" alt="" />
           </h1>
-          <p className="hm-hero__label">Smart Fuel Sustains IT.</p>
+          <p className="hm-hero__label"> <img src="/blogs/smart.png" alt="" /></p>
           <a
             href="#"
             className="hm-hero__btn"
-            onClick={(e) => nav("shop", null, e)}
+            onClick={(e) => nav("supplements", null, e)}
           >
-            Shop Now
-            <img src="/images/arrowdoen.png" alt="" />
+            
+            <img src="/blogs/shop.png" alt="" />
           </a>
         </div>
       </section>
@@ -362,7 +360,7 @@ export default function Home() {
               <SwiperSlide key={p.id}>
                 <div
                   className="hm-feat-card"
-                  onClick={(e) => nav("productdetail", p.id, e)}
+                  onClick={(e) => nav("product", p.id, e)}
                 >
                   {p.badge && <span className="hm-badge">{p.badge}</span>}
                   <div className="hm-feat-card__body">
@@ -472,19 +470,19 @@ export default function Home() {
           <div className="hm-goals__row hm-goals__row--top">
             <div className="hm-goal-card__overlay" />
             <div className="row align-items-center">
-              <div className="col-md-5">
+              <div className="col-md-5 prb-10">
                 <img className="w-100" src="/images/w1.png" alt="" />
               </div>
-              <div className="col-md-4">
+              <div className="col-md-4 prb-10">
                 <img className="" src="/images/w2.png" alt="" />
               </div>
-              <div className="col-md-3">
+              <div className="col-md-3 ">
                 <img className="w-100" src="/images/w3.png" alt="" />
               </div>
             </div>
           </div>
           <div className="row pt-4 align-items-center">
-            <div className="col-md-6">
+            <div className="col-md-6 prb-10">
               <img className="w-100" src="/images/w4.png" alt="" />
             </div>
             <div className="col-md-6">
@@ -599,7 +597,7 @@ export default function Home() {
               <a
                 href="#"
                 className="hm-merch__link"
-                onClick={(e) => nav("shop", null, e)}
+                onClick={(e) => nav("#", null, e)}
               >
                 shop now
               </a>

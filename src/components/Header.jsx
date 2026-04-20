@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import CartDrawer from '../pages/CartDrawer/CartDrawer';
 
 const imgLogoVector  = '/images/logo.png';
-const imgSearchIcon  = 'https://www.figma.com/api/mcp/asset/36767264-37ef-40ad-8632-02015c05df00';
+const imgSearchIcon  = '/blogs/search.png';
 const imgLangFlag    = '/supplements/profile.png';
 const imgAccountIcon = '/supplements/heart.png';
 const imgCartIcon    = '/supplements/bag.png';
@@ -28,8 +28,8 @@ const MOBILE_LINKS = [
   { label: 'Home',        page: 'home'        },
   { label: 'Supplements', page: 'supplements' },
   { label: 'Blog',        page: 'blog'        },
-  { label: 'Contact',     page: 'contact'     },
-  { label: 'Cart',        page: 'cart'        },
+  { label: 'About',     page: 'about'     },
+  { label: 'Contact',   page: 'contact'        },
 ];
 
 export default function Header() {
