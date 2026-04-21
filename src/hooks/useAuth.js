@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { loginUser, logoutUser, registerUser, forgotPassword as forgotPasswordRequest } from '../services/authService';
+import { loginUser, logoutUser, registerUser, forgotPassword as forgotPasswordRequest, resetPassword as resetPasswordRequest } from '../services/authService';
 
 const TOKEN_KEY = 'access_token';
 const USER_KEY = 'auth_user';
@@ -145,6 +145,22 @@ export default function useAuth() {
 		}
 	};
 
+	const resetPassword = async ({ email, token, password, password_confirmation }) => {
+		setIsLoading(true);
+		setError('');
+
+		try {
+			const response = await resetPasswordRequest({ email, token, password, password_confirmation });
+			return response;
+		} catch (err) {
+			const message = err?.message || 'Unable to reset password. Please try again.';
+			setError(message);
+			throw err;
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
 	return {
 		user,
 		role,
@@ -157,5 +173,6 @@ export default function useAuth() {
 		logout,
 		register,
 		forgotPassword,
+		resetPassword,
 	};
 }

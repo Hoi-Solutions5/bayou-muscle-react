@@ -4,6 +4,7 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-
 import Register from '../pages/Register';
 import Login from '../pages/Auth/Login';
 import ForgotPassword from '../pages/Auth/ForgotPassword';
+import ResetPassword from '../pages/Auth/ResetPassword';
 import Home          from '../pages/Home';
 import About         from '../pages/About/About';
 import Supplements   from '../pages/Supplements/Supplements';
@@ -31,7 +32,6 @@ import AdminAddBlogs from '../admin/pages/AdminAddBlogs';
 import AdminBlogCategory from '../admin/pages/AdminBlogCategory';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AdminDiscounts  from '../admin/pages/AdminDiscounts';
-import { Omega } from 'lucide-react';
 
 
 export default function AppRouter() {
@@ -53,6 +53,7 @@ export default function AppRouter() {
 			<Route path="/"            element={<Navigate to="/home" replace />} />
 			<Route path="/login"       element={<Login />} />
 			<Route path="/forgot-password" element={<ForgotPassword />} />
+			<Route path="/reset-password" element={<ResetPassword />} />
 			<Route path="/home"        element={<Home />} />
 			<Route path="/about"       element={<About />} />
 			<Route path="/supplements" element={<Supplements />} />

@@ -71,3 +71,17 @@ export const forgotPassword = async ({ email }) => {
 	});
 	return response;
 }
+
+export const resetPassword = async ({ email, token, password, password_confirmation }) => {
+	const response = await apiRequest('/auth/reset-password', {
+		method: 'POST',
+		data: {
+			email,
+			token,
+			password,
+			password_confirmation,
+		},
+	});
+
+	return response;
+};
