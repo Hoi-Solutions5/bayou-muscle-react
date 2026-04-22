@@ -67,6 +67,7 @@ export default function AppRouter() {
 			<Route path="/checkout"    element={<Cart onNavigate={navigate} initialView="checkout" />} />
 			<Route path="/blog"        element={<Blog onNavigate={navigate} />} />
 			<Route path="/blogdetails" element={<BlogDetails />} />
+			<Route path="/blogdetails/:slug" element={<BlogDetails />} />
 			<Route
 				path="/profile"
 				element={

@@ -61,3 +61,20 @@ export const deleteBlogCategory = async (categoryId) => {
     });
     return response;
 }
+
+
+// User Blogs api
+export const getWebsiteBlogs = async (params) => {
+    const response = await apiRequest('/website/blogs', {
+        method: 'GET',
+        params,
+    });
+    return response;
+}
+
+export const getBlogDetails = async (slug) => {
+    const response = await apiRequest(`/website/blogs/${slug}`, {
+        method: 'GET',
+    });
+    return response;
+}

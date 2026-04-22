@@ -76,6 +76,9 @@ export default function ProductDetail() {
   }, [product]);
 
   const reviewsList = Array.isArray(product?.reviewsList) ? product.reviewsList : [];
+  const descriptionHtml = product?.description || "<p>No description available.</p>";
+  const additionalInfoHtml =
+    product?.additionalInfo || "<p>No additional info available.</p>";
 
   useEffect(() => {
     let isMounted = true;
@@ -298,7 +301,10 @@ export default function ProductDetail() {
                   {activeTab === "description" && (
                     <div className="pd-tab-description">
                       <h3 className="pd-tab-h3">Product Description</h3>
-                      <p className="pd-tab-p">{product?.description || "No description available."}</p>
+                      <div
+                        className="pd-tab-p"
+                        dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+                      />
                     </div>
                   )}
 
@@ -316,7 +322,13 @@ export default function ProductDetail() {
                           </tr>
                           <tr>
                             <td className="pd-info-label">Additional Info</td>
-                            <td>{product?.additionalInfo || "No additional info available."}</td>
+                            <td>
+                              <div
+                                dangerouslySetInnerHTML={{
+                                  __html: additionalInfoHtml,
+                                }}
+                              />
+                            </td>
                           </tr>
                         </tbody>
                       </table>
@@ -345,7 +357,7 @@ export default function ProductDetail() {
               <div className="pd-popular">
                 <div className="pd-popular__head">
                   <h3 className="pd-popular__title">
-                    <span>Related </span>
+                    <span>Popular </span>
                     <span className="pd-popular__title--muted">Products</span>
                   </h3>
                 </div>

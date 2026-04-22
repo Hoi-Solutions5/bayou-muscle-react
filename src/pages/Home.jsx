@@ -8,6 +8,7 @@ import Footer from "../components/Footer";
 import Posts from "../components/Posts";
 import Marquee from "../components/Marquee";
 import useUserProducts from "../hooks/useUserProducts";
+import useUserBlogs from "../hooks/useUserBlogs";
 
 /* ── DATA ── */
 const goalBanners = [
@@ -151,6 +152,7 @@ function Stars({ count }) {
 
 export default function Home() {
   const { fetchUserProducts, fetchLatestProducts } = useUserProducts();
+  const { blogs, loadLatestBlogs } = useUserBlogs();
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [isFeaturedLoading, setIsFeaturedLoading] = useState(true);
   const [latestProducts, setLatestProducts] = useState([]);
@@ -192,6 +194,23 @@ export default function Home() {
       isMounted = false;
     };
   }, [fetchUserProducts, fetchLatestProducts]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadBlogs = async () => {
+      await loadLatestBlogs();
+      if (!isMounted) {
+        return;
+      }
+    };
+
+    loadBlogs();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [loadLatestBlogs]);
 
   // Testimonial Slider Logic
   useEffect(() => {
@@ -260,6 +279,8 @@ export default function Home() {
     const actualProductId = typeof productId === "object" ? null : productId;
     window.__navigate && window.__navigate(page, actualProductId);
   };
+
+  const latestBlogs = blogs.slice(0, 2);
 
   return (
     <>
@@ -632,19 +653,19 @@ export default function Home() {
           </a>
         </div>
         <div className="hm-blog__grid">
-          {blogPosts.map((post, i) => (
+          {latestBlogs.map((post, i) => (
             <div key={i} className="hm-blog__pair">
               <div className="hm-blog__img">
-                <img src={post.img} alt={post.title} loading="lazy" />
+                <img src={post.image} alt={post.title} loading="lazy" />
               </div>
               <div className="hm-blog__text">
-                <span className="hm-blog__cat">{post.cat}</span>
+                <span className="hm-blog__cat">{post.category}</span>
                 <h3 className="hm-blog__title">{post.title}</h3>
-                <p className="hm-blog__excerpt">{post.excerpt}</p>
+                <p className="hm-blog__excerpt">{post.summary}</p>
                 <a
                   href="#"
                   className="hm-blog__more"
-                  onClick={(e) => nav("blog", null, e)}
+                  onClick={(e) => nav("blogdetails", post.slug, e)}
                 >
                   Read more
                 </a>
