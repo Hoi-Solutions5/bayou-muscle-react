@@ -7,3 +7,12 @@ export const fetchContacts = async (params) => {
     });
     return response;
 }
+
+
+export const submitContact = async (data) => {
+    const response = await apiRequest('/contacts', {
+        method: 'POST', 
+        data,
+    });
+    return response;
+}

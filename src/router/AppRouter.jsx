@@ -10,12 +10,14 @@ import About         from '../pages/About/About';
 import Supplements   from '../pages/Supplements/Supplements';
 import Shop          from '../pages/Shop-old';
 import Merchandise   from '../pages/Merchandise/Merchandise';
+import CategoryProducts from '../pages/CategoryProducts/CategoryProducts';
 import ProductDetail from '../pages/ProductDetail/ProductDetail';
 import Contact       from '../pages/Contact';
 import Cart          from '../pages/Cartx';
 import Blog          from '../pages/Blog/Blog';
 import BlogDetails   from '../pages/BlogDetails/BlogDetails'; 
 import Profile 	 from '../pages/Profile/Profile';
+import MyCart from '../pages/MyCart/MyCart';
 
 import AdminDashboard  from '../admin/pages/AdminDashboard';
 import AdminAddProduct from '../admin/pages/AdminAddProduct';
@@ -32,6 +34,7 @@ import AdminAddBlogs from '../admin/pages/AdminAddBlogs';
 import AdminBlogCategory from '../admin/pages/AdminBlogCategory';
 import ProtectedRoute from '../components/ProtectedRoute';
 import AdminDiscounts  from '../admin/pages/AdminDiscounts';
+import AdminNewsletter from '../admin/pages/AdminNewsletter';
 
 
 export default function AppRouter() {
@@ -57,6 +60,7 @@ export default function AppRouter() {
 			<Route path="/home"        element={<Home />} />
 			<Route path="/about"       element={<About />} />
 			<Route path="/supplements" element={<Supplements />} />
+			<Route path="/category/:categorySlug" element={<CategoryProducts />} />
 			<Route path="/shop"        element={<Shop />} />
 			<Route path="/merchandise" element={<Merchandise />} />
 			<Route path="/product"      element={<ProductDetail onNavigate={navigate} />} />
@@ -68,6 +72,7 @@ export default function AppRouter() {
 			<Route path="/blog"        element={<Blog onNavigate={navigate} />} />
 			<Route path="/blogdetails" element={<BlogDetails />} />
 			<Route path="/blogdetails/:slug" element={<BlogDetails />} />
+			<Route path="/my-cart"     element={<MyCart />} />
 			<Route
 				path="/profile"
 				element={
@@ -98,7 +103,7 @@ export default function AppRouter() {
 			<Route path="/admin/settings"               element={<ProtectedRoute allowedRoles={['admin']} unauthenticatedRedirect="/admin/login" unauthorizedRedirect="/profile"><AdminSettings /></ProtectedRoute>} />
 			<Route path="/admin/categories"             element={<ProtectedRoute allowedRoles={['admin']} unauthenticatedRedirect="/admin/login" unauthorizedRedirect="/profile"><AdminCategories /></ProtectedRoute>} />
 			<Route path="/admin/discounts"              element={<ProtectedRoute allowedRoles={['admin']} unauthenticatedRedirect="/admin/login" unauthorizedRedirect="/profile"><AdminDiscounts /></ProtectedRoute>} />
-
+			<Route path="/admin/newsletter"            element={<ProtectedRoute allowedRoles={['admin']} unauthenticatedRedirect="/admin/login" unauthorizedRedirect="/profile"><AdminNewsletter /></ProtectedRoute>} />
 			<Route path="*" element={<Navigate to="/home" replace />} />
 		</Routes>
 	);

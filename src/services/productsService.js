@@ -59,3 +59,9 @@ export const getProductDetails = async (productslug) => {
   return response;
 }
 
+export const getProductsByCategory = async (categorySlug) => {
+  const response = await apiRequest(`/website/prod-by-cat/${categorySlug}`, {
+    method: 'GET',  
+  });
+  return response;
+}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { fetchContacts } from '../services/contactService';
+import { fetchContacts,submitContact } from '../services/contactService';
 
 const normalizeContact = (contact) => ({
     id: String(contact?.id || ''),
@@ -35,6 +35,21 @@ export default function useContacts() {
         }
     }, []);
 
+    const submitUserContact = useCallback(async (data) => {
+        setIsLoading(true);
+        setError('');
+        try {
+            const response = await submitContact(data);
+            return response;
+        } catch (err) {
+            setError(err?.message || 'Unable to submit contact.');
+            throw err;
+        }
+        finally {
+            setIsLoading(false);
+        }
+    }, []);
+
     useEffect(() => {
         loadContacts();
     }, [loadContacts]);
@@ -44,5 +59,6 @@ export default function useContacts() {
         isLoading,
         error,
         loadContacts,
+        submitUserContact,
     };
 }

@@ -11,6 +11,7 @@ export default function AdminSidebar({ isDrawerOpen, onClose }) {
     ['Products'],
     ['Orders'],
     ['Users'],
+    ['Newsletter'],
     ['Settings'],
     ['Categories'],
     ['Discounts'],

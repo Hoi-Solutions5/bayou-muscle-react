@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './CartDrawer.css';
 
 const imgProduct = '/images/cartp.png';
@@ -8,6 +9,8 @@ const cartItems = [
 ];
 
 export default function CartDrawer({ isOpen, onClose }) {
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -70,8 +73,8 @@ export default function CartDrawer({ isOpen, onClose }) {
             <span className="cd-subtotal__label">Subtotal:</span>
             <span className="cd-subtotal__value">${subtotal.toFixed(2)}</span>
           </div>
-          <button className="cd-btn cd-btn--view">View Cart</button>
-          <button className="cd-btn cd-btn--checkout">Checkout</button>
+          <button className="cd-btn cd-btn--view" onClick={() => navigate('/my-cart')}>View Cart</button>
+          <button className="cd-btn cd-btn--checkout" onClick={() => navigate('/checkout')}>Checkout</button>
         </div>
       </div>
     </>
