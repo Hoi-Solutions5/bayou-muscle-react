@@ -164,7 +164,14 @@ export default function Header() {
             <button
               className="hdr__cart-btn"
               aria-label="Cart"
-              onClick={() => setCartOpen(true)}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  navigate('/login');
+                  return;
+                }
+
+                setCartOpen(true);
+              }}
             >
               <img src={imgCartIcon} alt="" className="hdr__cart-icon" />
               <span className="hdr__cart-badge">{cartCount}</span>

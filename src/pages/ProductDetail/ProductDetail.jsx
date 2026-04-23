@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import toast from 'react-hot-toast';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
@@ -10,6 +11,7 @@ import Footer from "../../components/Footer";
 import Posts from "../../components/Posts";
 import Marquee from "../../components/Marquee";
 import useUserProducts from "../../hooks/useUserProducts";
+import useCart from '../../hooks/useCart';
 
 const imgPayPng = "/products/pay.png";
 const fallbackProductImage = "/products/bp.png";
@@ -51,6 +53,7 @@ export default function ProductDetail() {
   const { slug, id } = useParams();
   const navigate = useNavigate();
   const { getProduct } = useUserProducts();
+  const { addItemToCart } = useCart({ autoLoad: false });
 
   const [activeThumb, setActiveThumb] = useState(0);
   const [activeTab, setActiveTab] = useState("description");
@@ -128,6 +131,17 @@ export default function ProductDetail() {
       return;
     }
     navigate(`/product/${targetSlug}`);
+  };
+
+  const handleAddToCart = async () => {
+    try {
+      const result = await addItemToCart(product?.id, qty);
+      if (result) {
+        toast.success('Added to cart.');
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Unable to add item to cart.');
+    }
   };
 
   return (
@@ -226,7 +240,7 @@ export default function ProductDetail() {
                     </button>
                   </div>
 
-                  <button className="pd-add-btn">Add to cart</button>
+                  <button className="pd-add-btn" type="button" onClick={handleAddToCart}>Add to cart</button>
                   <button className="pd-icon-btn" aria-label="Add to wishlist">
                     <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
                       <path
@@ -387,7 +401,7 @@ export default function ProductDetail() {
                     </div>
                   ))}
                 </div>
-                <button className="pd-popular__add-btn">Add to cart</button>
+                <button className="pd-popular__add-btn" type="button" onClick={handleAddToCart}>Add to cart</button>
               </div>
             </div>
 

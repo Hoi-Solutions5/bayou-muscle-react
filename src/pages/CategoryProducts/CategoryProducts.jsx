@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 import '../Supplements/Supplements.css';
 import Header from '../../components/Header';
@@ -8,6 +9,7 @@ import Posts from '../../components/Posts';
 import Marquee from '../../components/Marquee';
 import useCategories from '../../hooks/useCategories';
 import useProducts from '../../hooks/useProducts';
+import useCart from '../../hooks/useCart';
 
 const imgStarFull = '/supplements/star.png';
 const imgStarHalf = '/supplements/star.png';
@@ -59,7 +61,7 @@ function StarRating({ rating = 0 }) {
   );
 }
 
-function ProductCard({ product }) {
+function ProductCard({ product, onAddToCart }) {
   const productRating = Number(product?.rating?.average ?? product?.rating?.stars ?? 0);
   const productRatingCount = Number(product?.rating?.count ?? 0);
   const productImage = product?.image || product?.images?.[0]?.image || '';
@@ -106,7 +108,7 @@ function ProductCard({ product }) {
           </div>
         </div>
 
-        <button className="supp-card__add-btn" aria-label="Add to cart">
+        <button className="supp-card__add-btn" aria-label="Add to cart" type="button" onClick={() => onAddToCart(product)}>
           Add to cart
         </button>
       </div>
@@ -118,9 +120,21 @@ export default function CategoryProducts() {
   const { categorySlug = '' } = useParams();
   const { categories } = useCategories();
   const { products, isLoading, loadProductsByCategory } = useProducts({ autoLoad: false });
+  const { addItemToCart } = useCart({ autoLoad: false });
   const [currentPage, setCurrentPage] = useState(1);
   const [activeFilter, setActiveFilter] = useState('New Arrivals');
   const [viewMode, setViewMode] = useState('grid');
+
+  const handleAddToCart = async (product) => {
+    try {
+      const result = await addItemToCart(product?.id, 1);
+      if (result) {
+        toast.success('Added to cart.');
+      }
+    } catch (err) {
+      toast.error(err?.message || 'Unable to add item to cart.');
+    }
+  };
 
   useEffect(() => {
     if (categorySlug) {
@@ -281,7 +295,7 @@ export default function CategoryProducts() {
 
           <div className={`supp-grid ${viewMode === 'list' ? 'supp-grid--list' : ''}`}>
             {!isLoading && currentProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
             ))}
           </div>
 

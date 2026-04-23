@@ -1,25 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-
-const initialCartItems = [
-	{
-		id: 1,
-		name: 'ATOM Creatine Monohydrate',
-		variant: 'Unflavoured · 500g',
-		price: 29.95,
-		qty: 2,
-		img: '/supplements/p1.png',
-	},
-	{
-		id: 2,
-		name: 'ISOCOOL Cold Filtered Protein Isolate',
-		variant: 'Chocolate Fudge · 1kg',
-		price: 42.0,
-		qty: 1,
-		img: '/supplements/p7.png',
-	},
-];
+import useCart from '../../hooks/useCart';
 
 const promoOptions = ['FIRST10', 'SAVE15', 'BAYOU20'];
 
@@ -28,10 +10,29 @@ function formatMoney(value) {
 }
 
 export default function MyCart() {
-	const [items, setItems] = useState(initialCartItems);
+	const { cartItems, isLoading, error, loadCartItems } = useCart({ autoLoad: false });
+	const [items, setItems] = useState([]);
 	const [promo, setPromo] = useState('');
 	const [promoApplied, setPromoApplied] = useState(false);
 	const [promoError, setPromoError] = useState('');
+
+	useEffect(() => {
+		loadCartItems().catch(() => {});
+	}, [loadCartItems]);
+
+	useEffect(() => {
+		setItems(
+			cartItems.map((item) => ({
+				id: item.id,
+				name: item.productName,
+				variant: item.productSlug ? `Product · ${item.productSlug}` : 'Product',
+				price: Number(item.unitPrice || 0),
+				qty: Number(item.quantity || 0),
+				img: item.image || '/supplements/p1.png',
+				total: Number(item.total || 0),
+			})),
+		);
+	}, [cartItems]);
 
 	const updateQty = (id, delta) => {
 		setItems((previous) =>
@@ -45,7 +46,10 @@ export default function MyCart() {
 		setItems((previous) => previous.filter((item) => item.id !== id));
 	};
 
-	const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
+	const subtotal = useMemo(
+		() => items.reduce((sum, item) => sum + (Number(item.total) || item.price * item.qty), 0),
+		[items],
+	);
 	const discount = promoApplied ? subtotal * 0.1 : 0;
 	const shipping = subtotal > 100 ? 0 : 5.99;
 	const total = subtotal - discount + shipping;
@@ -79,7 +83,11 @@ export default function MyCart() {
 							<span className="cart-count">{items.length} items</span>
 						</div>
 
-						{items.length === 0 ? (
+						{isLoading && items.length === 0 ? (
+							<div className="cart-empty">
+								<h3>Loading cart...</h3>
+							</div>
+						) : items.length === 0 ? (
 							<div className="cart-empty">
 								<div className="cart-empty-icon">🛒</div>
 								<h3>Your cart is empty</h3>
@@ -105,7 +113,7 @@ export default function MyCart() {
 										<div className="cart-item-info">
 											<p className="cart-item-name">{item.name}</p>
 											<p className="cart-item-variant">{item.variant}</p>
-											<p className="cart-item-unit-price">{formatMoney(item.price)} each</p>
+											  <p className="cart-item-unit-price">{formatMoney(item.price)} each</p>
 										</div>
 										<div className="cart-qty-ctrl">
 											<button className="cart-qty-btn" onClick={() => updateQty(item.id, -1)}>−</button>
@@ -214,7 +222,9 @@ export default function MyCart() {
 				</div>
 			</section>
 
-			<Footer />
+			  {error ? <div className="cart-empty" style={{ marginTop: '20px' }}><h3>{error}</h3></div> : null}
+
+			  <Footer />
 		</>
 	);
 }

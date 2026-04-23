@@ -67,12 +67,12 @@ export default function AppRouter() {
 			<Route path="/product/:slug" element={<ProductDetail onNavigate={navigate} />} />
 			<Route path="/contact"     element={<Contact />} />
 			<Route path="/register"    element={<Register />} />
-			<Route path="/cart"        element={<Cart onNavigate={navigate} initialView="cart" />} />
-			<Route path="/checkout"    element={<Cart onNavigate={navigate} initialView="checkout" />} />
+			<Route path="/cart"        element={<ProtectedRoute allowedRoles={['user']} unauthenticatedRedirect="/login" unauthorizedRedirect="/admin/dashboard"><Cart onNavigate={navigate} initialView="cart" /></ProtectedRoute>} />
+			<Route path="/checkout"    element={<ProtectedRoute allowedRoles={['user']} unauthenticatedRedirect="/login" unauthorizedRedirect="/admin/dashboard"><Cart onNavigate={navigate} initialView="checkout" /></ProtectedRoute>} />
 			<Route path="/blog"        element={<Blog onNavigate={navigate} />} />
 			<Route path="/blogdetails" element={<BlogDetails />} />
 			<Route path="/blogdetails/:slug" element={<BlogDetails />} />
-			<Route path="/my-cart"     element={<MyCart />} />
+			<Route path="/my-cart"     element={<ProtectedRoute allowedRoles={['user']} unauthenticatedRedirect="/login" unauthorizedRedirect="/admin/dashboard"><MyCart /></ProtectedRoute>} />
 			<Route
 				path="/profile"
 				element={
