@@ -20,7 +20,7 @@ const normalizeWishlistItem = (entry) => {
     summary: product?.summary || '',
     price: product?.price ?? 0,
     quantity: Number(product?.quantity ?? 1),
-    img: product?.image || product?.thumbnail || '',
+    img: String(entry?.product_image || product?.thumbnail || ''),
     createdAt: entry?.created_at || null,
     updatedAt: entry?.updated_at || null,
   };

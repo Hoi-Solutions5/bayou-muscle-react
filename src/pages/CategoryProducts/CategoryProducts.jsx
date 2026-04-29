@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -11,18 +11,12 @@ import useCategories from '../../hooks/useCategories';
 import useProducts from '../../hooks/useProducts';
 import useCart from '../../hooks/useCart';
 
+const ALL_FILTER = 'all';
+
 const imgStarFull = '/supplements/star.png';
 const imgStarHalf = '/supplements/star.png';
 const imgStarFull2 = '/supplements/star.png';
 const imgStarEmpty = '/supplements/star.png';
-
-const filterTabs = [
-  'New Arrivals',
-  'Best Sellers',
-  'Health & Vitamins',
-  'Featured',
-  'Clearance',
-];
 
 const PRODUCTS_PER_PAGE = 8;
 
@@ -138,12 +132,18 @@ function ProductCard({ product, onAddToCart, onOpenProduct }) {
 export default function CategoryProducts() {
   const navigate = useNavigate();
   const { categorySlug = '' } = useParams();
-  const { categories } = useCategories();
+  const { categories, loadSubCategories } = useCategories();
   const { products, isLoading, loadProductsByCategory } = useProducts({ autoLoad: false });
   const { addItemToCart } = useCart({ autoLoad: false });
   const [currentPage, setCurrentPage] = useState(1);
-  const [activeFilter, setActiveFilter] = useState('New Arrivals');
+  const [activeFilter, setActiveFilter] = useState(ALL_FILTER);
+  const [subcategoryTabs, setSubcategoryTabs] = useState([]);
   const [viewMode, setViewMode] = useState('grid');
+
+  const currentCategory = useMemo(
+    () => categories.find((category) => category.slug === categorySlug) || null,
+    [categories, categorySlug],
+  );
 
   const handleAddToCart = async (product) => {
     try {
@@ -170,15 +170,63 @@ export default function CategoryProducts() {
     }
   }, [categorySlug, loadProductsByCategory]);
 
-  const categoryTitle =
-    categories.find((category) => category.slug === categorySlug)?.title ||
-    formatTitleFromSlug(categorySlug);
+  useEffect(() => {
+    let isActive = true;
 
-  const totalProducts = products.length;
+    const syncSubcategories = async () => {
+      if (!currentCategory?.id) {
+        setSubcategoryTabs([]);
+        setActiveFilter(ALL_FILTER);
+        return;
+      }
+
+      const localSubcategories = Array.isArray(currentCategory.subcategories)
+        ? currentCategory.subcategories
+        : [];
+
+      const resolvedSubcategories = localSubcategories.length > 0
+        ? localSubcategories
+        : await loadSubCategories(currentCategory.id);
+
+      if (!isActive) {
+        return;
+      }
+
+      setSubcategoryTabs(
+        (resolvedSubcategories || []).map((subcategory) => ({
+          id: String(subcategory.id),
+          title: subcategory.title || 'Untitled',
+          slug: subcategory.slug || '',
+          status: subcategory.status || 'inactive',
+        })),
+      );
+      setActiveFilter(ALL_FILTER);
+      setCurrentPage(1);
+    };
+
+    syncSubcategories();
+
+    return () => {
+      isActive = false;
+    };
+  }, [currentCategory, loadSubCategories]);
+
+  const categoryTitle =
+    currentCategory?.title || formatTitleFromSlug(categorySlug);
+
+  const visibleProducts = useMemo(() => {
+    if (activeFilter === ALL_FILTER) {
+      return products;
+    }
+
+    return products.filter((product) => String(product.categorySlug || '') === activeFilter);
+  }, [activeFilter, products]);
+
+  const totalProducts = visibleProducts.length;
   const totalPages = Math.ceil(totalProducts / PRODUCTS_PER_PAGE);
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
   const endIndex = startIndex + PRODUCTS_PER_PAGE;
-  const currentProducts = products.slice(startIndex, endIndex);
+  const currentProducts = visibleProducts.slice(startIndex, endIndex);
 
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
@@ -230,6 +278,14 @@ export default function CategoryProducts() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const filterTabs = [
+    { id: ALL_FILTER, label: 'All' },
+    ...subcategoryTabs.map((subcategory) => ({
+      id: subcategory.slug || subcategory.id,
+      label: subcategory.title,
+    })),
+  ];
+
   return (
     <>
       <Header />
@@ -261,11 +317,12 @@ export default function CategoryProducts() {
           <div className="supp-hero__filters">
             {filterTabs.map((tab) => (
               <button
-                key={tab}
-                className={`supp-filter-btn ${activeFilter === tab ? 'supp-filter-btn--active' : ''}`}
-                onClick={() => handleFilterChange(tab)}
+                key={tab.id}
+                className={`supp-filter-btn ${activeFilter === tab.id ? 'supp-filter-btn--active' : ''}`}
+                onClick={() => handleFilterChange(tab.id)}
+                type="button"
               >
-                {tab}
+                {tab.label}
               </button>
             ))}
           </div>
